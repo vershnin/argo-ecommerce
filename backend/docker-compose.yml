@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: argo_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: argo_ecommerce
+      POSTGRES_USER: argo
+      POSTGRES_PASSWORD: argo_secret_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - argo_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U argo -d argo_ecommerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  argo_postgres_data:
