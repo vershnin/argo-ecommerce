@@ -1,0 +1,26 @@
+# Maven build output
+backend/target/
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# IntelliJ / IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# NEVER commit secrets
+backend/src/main/resources/application-prod.properties
