@@ -50,7 +50,7 @@ export default function AdminProducts() {
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
-    const matchCat = categoryFilter === "all" || p.category === categoryFilter;
+    const matchCat = categoryFilter === "all" || p.category.name === categoryFilter;
     return matchSearch && matchCat;
   });
 
@@ -62,8 +62,8 @@ export default function AdminProducts() {
 
   const openEdit = (p: Product) => {
     setEditing(p);
-    // Find category ID by name (backend response has category as name string currently)
-    const cat = categories.find(c => c.name === p.category);
+    // Find category ID by name
+    const cat = categories.find(c => c.name === p.category.name);
     setForm({
       name: p.name, 
       categoryId: cat ? cat.id : "", 
@@ -115,7 +115,7 @@ export default function AdminProducts() {
     }
   };
 
-  const handleDelete = async (id: string | number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
       await deleteProduct(id);
@@ -196,7 +196,7 @@ export default function AdminProducts() {
                     </div>
                   </td>
                   <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{p.sku}</td>
-                  <td className="py-3 px-4"><Badge variant="secondary">{p.category}</Badge></td>
+                  <td className="py-3 px-4"><Badge variant="secondary">{p.category.name}</Badge></td>
                   <td className="py-3 px-4 text-right font-medium text-foreground">{formatPrice(p.price)}</td>
                   <td className="py-3 px-4 text-right">
                     {p.stockQuantity === 0 ? (

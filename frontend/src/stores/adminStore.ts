@@ -13,8 +13,8 @@ interface AdminStore {
   // Actions
   fetchProducts: () => Promise<void>;
   addProduct: (product: api.AdminProductRequest) => Promise<void>;
-  updateProduct: (id: string | number, updates: api.AdminProductRequest) => Promise<void>;
-  deleteProduct: (id: string | number) => Promise<void>;
+  updateProduct: (id: string, updates: api.AdminProductRequest) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   updateStock: (id: string, quantity: number) => void;
 
   // Orders

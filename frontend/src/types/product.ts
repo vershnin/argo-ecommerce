@@ -1,9 +1,9 @@
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   slug: string;
   category: {
-    id: number;
+    id: string;
     name: string;
     slug: string;
   };
@@ -15,8 +15,8 @@ export interface Product {
   shortDescription: string;
   imageUrl: string;
   additionalImages?: string[];
-  specifications: string;
-  features: string;
+  specifications: Record<string, string>;
+  features: string[];
   sku: string;
   stockQuantity: number;
   inStock: boolean;
@@ -38,18 +38,20 @@ export interface WishlistItem {
 }
 
 export interface Review {
-  id: number;
-  productId: number;
-  userId: number;
+  id: string;
+  productId: string;
+  userId: string;
   userName: string;
   rating: number;
   title: string;
   comment: string;
+  verified?: boolean;
+  helpful?: number;
   createdAt: string;
 }
 
 export interface Order {
-  id: number;
+  id: string;
   items: CartItem[];
   subtotal: number;
   deliveryFee: number;

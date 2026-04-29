@@ -47,12 +47,12 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
   return response.data;
 }
 
-export async function fetchProductById(id: number): Promise<Product | null> {
+export async function fetchProductById(id: string): Promise<Product | null> {
   const response = await api.get<Product>(`/products/${id}`);
   return response.data;
 }
 
-export async function fetchRelatedProducts(productId: number, limit: number = 4): Promise<Product[]> {
+export async function fetchRelatedProducts(productId: string, limit: number = 4): Promise<Product[]> {
   const response = await api.get<Product[]>(`/products/${productId}/related`, {
     params: { limit },
   });
@@ -81,12 +81,12 @@ export async function fetchCategories(): Promise<Category[]> {
 
 // ─── Reviews ─────────────────────────────────────────────────
 
-export async function fetchReviews(productId: number): Promise<Review[]> {
+export async function fetchReviews(productId: string): Promise<Review[]> {
   const response = await api.get<PageResponse<Review>>(`/products/${productId}/reviews`);
   return response.data.content;
 }
 
-export async function submitReview(productId: number, review: { rating: number; title: string; comment: string }): Promise<Review> {
+export async function submitReview(productId: string, review: { rating: number; title: string; comment: string }): Promise<Review> {
   const response = await api.post<Review>(`/products/${productId}/reviews`, review);
   return response.data;
 }
@@ -159,11 +159,11 @@ export async function adminCreateProduct(data: AdminProductRequest): Promise<Pro
   return response.data;
 }
 
-export async function adminUpdateProduct(id: string | number, data: AdminProductRequest): Promise<Product> {
+export async function adminUpdateProduct(id: string, data: AdminProductRequest): Promise<Product> {
   const response = await api.put<Product>(`/admin/products/${id}`, data);
   return response.data;
 }
 
-export async function adminDeleteProduct(id: string | number): Promise<void> {
+export async function adminDeleteProduct(id: string): Promise<void> {
   await api.delete(`/admin/products/${id}`);
 }
