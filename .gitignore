@@ -7,6 +7,9 @@ frontend/dist/
 frontend/.env
 frontend/.env.local
 
+# TypeScript build cache
+*.tsbuildinfo
+
 # IntelliJ / IDE files
 .idea/
 *.iml
