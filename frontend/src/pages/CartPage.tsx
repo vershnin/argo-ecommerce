@@ -54,6 +54,29 @@ export default function CartPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-sm">{formatPrice(item.subtotal)}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 ${isInWishlist(item.productId) ? 'text-primary' : 'text-muted-foreground'}`}
+                        onClick={async () => {
+                          if (isInWishlist(item.productId)) {
+                            // Already in wishlist, maybe do nothing or remove
+                            toast({ title: "Already in wishlist" });
+                          } else {
+                            await addToWishlist({
+                              id: item.productId,
+                              name: item.name,
+                              imageUrl: item.imageUrl,
+                              price: item.price,
+                              // Other fields might be missing but for wishlist usually minimal info is enough
+                              // or we should fetch the full product
+                            } as any);
+                            toast({ title: "Added to wishlist" });
+                          }
+                        }}
+                      >
+                        <Heart className={`w-4 h-4 ${isInWishlist(item.productId) ? 'fill-primary' : ''}`} />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeItem(item.cartItemId)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>

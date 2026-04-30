@@ -175,12 +175,12 @@ export default function ProductDetailPage() {
               variant="outline"
               size="icon"
               className="h-12 w-12 rounded-full shrink-0"
-              onClick={() => {
+              onClick={async () => {
                 if (inWishlist) {
-                  removeFromWishlist(product.id);
+                  await removeFromWishlist(product.id);
                   toast({ title: "Removed from wishlist" });
                 } else {
-                  addToWishlist(product);
+                  await addToWishlist(product);
                   toast({ title: "Added to wishlist" });
                 }
               }}

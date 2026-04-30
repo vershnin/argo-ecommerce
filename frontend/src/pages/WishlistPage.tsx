@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { Heart, Loader2, ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useCartStore } from "@/stores/cartStore";
@@ -7,9 +8,22 @@ import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/formatters";
 
 export default function WishlistPage() {
-  const { items, removeItem, clearWishlist } = useWishlistStore();
+  const { items, isLoading, fetchWishlist, removeItem, clearWishlist } = useWishlistStore();
   const addToCart = useCartStore((s) => s.addItem);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchWishlist();
+  }, [fetchWishlist]);
+
+  if (isLoading) {
+    return (
+      <div className="section-container py-20 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+        <p className="text-muted-foreground">Loading your wishlist...</p>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -28,9 +42,7 @@ export default function WishlistPage() {
     <div className="section-container py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">Wishlist ({items.length})</h1>
-        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={clearWishlist}>
-          Clear All
-        </Button>
+        {/* clearWishlist isn't implemented on backend, we could remove it or implement it by looping removals */}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

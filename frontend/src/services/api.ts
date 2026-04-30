@@ -177,3 +177,23 @@ export async function adminUpdateProduct(id: number, data: AdminProductRequest):
 export async function adminDeleteProduct(id: number): Promise<void> {
   await api.delete(`/admin/products/${id}`);
 }
+
+// ─── Wishlist ────────────────────────────────────────────────
+
+export async function fetchWishlist(): Promise<Product[]> {
+  const response = await api.get<Product[]>('/wishlist');
+  return response.data;
+}
+
+export async function addToWishlist(productId: number): Promise<void> {
+  await api.post(`/wishlist/${productId}`);
+}
+
+export async function removeFromWishlist(productId: number): Promise<void> {
+  await api.delete(`/wishlist/${productId}`);
+}
+
+export async function checkWishlistStatus(productId: number): Promise<boolean> {
+  const response = await api.get<{ wishlisted: boolean }>(`/wishlist/${productId}/status`);
+  return response.data.wishlisted;
+}

@@ -27,14 +27,14 @@ export function ProductCard({ product }: ProductCardProps) {
     toast({ title: "Added to cart", description: product.name });
   };
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
+  const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (inWishlist) {
-      removeFromWishlist(product.id);
+      await removeFromWishlist(product.id);
       toast({ title: "Removed from wishlist" });
     } else {
-      addToWishlist(product);
+      await addToWishlist(product);
       toast({ title: "Added to wishlist", description: product.name });
     }
   };
