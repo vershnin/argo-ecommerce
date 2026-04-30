@@ -5,8 +5,8 @@ import { Product } from '@/types/product';
 interface WishlistStore {
   items: Product[];
   addItem: (product: Product) => void;
-  removeItem: (productId: string) => void;
-  isInWishlist: (productId: string) => boolean;
+  removeItem: (productId: number) => void;
+  isInWishlist: (productId: number) => boolean;
   clearWishlist: () => void;
 }
 

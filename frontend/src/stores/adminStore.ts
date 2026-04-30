@@ -13,9 +13,9 @@ interface AdminStore {
   // Actions
   fetchProducts: () => Promise<void>;
   addProduct: (product: api.AdminProductRequest) => Promise<void>;
-  updateProduct: (id: string, updates: api.AdminProductRequest) => Promise<void>;
-  deleteProduct: (id: string) => Promise<void>;
-  updateStock: (id: string, quantity: number) => void;
+  updateProduct: (id: number, updates: api.AdminProductRequest) => Promise<void>;
+  deleteProduct: (id: number) => Promise<void>;
+  updateStock: (id: number, quantity: number) => void;
 
   // Orders
   addOrder: (order: Order) => void;

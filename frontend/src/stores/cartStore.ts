@@ -39,8 +39,8 @@ export const useCartStore = create<CartStore>()((set) => ({
         window.location.href = '/login';
         return;
       }
-      // Backend expects productId as number. product.id is currently string in frontend types
-      const cart = await cartApi.addItem(Number(product.id), quantity);
+// product.id is now number, matching backend type
+      const cart = await cartApi.addItem(product.id, quantity);
       set({
         items: cart.items,
         totalAmount: cart.totalAmount,
