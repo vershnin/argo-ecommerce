@@ -3,6 +3,9 @@ import { useAuthStore } from '../stores/authStore';
 
 const apiClient = axios.create({
   baseURL: '/api', // Proxied by Vite to backend:8080
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 apiClient.interceptors.request.use(

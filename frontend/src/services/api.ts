@@ -1,4 +1,4 @@
-import api from '@/lib/axios';
+import { apiClient as api } from '@/api/client';
 import { Product, Review, PromoCode, Category } from '@/types/product';
 import { UserProfile } from '@/stores/authStore';
 
