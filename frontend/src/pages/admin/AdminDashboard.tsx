@@ -1,19 +1,43 @@
-import { Package, ClipboardList, Tag, TrendingUp, AlertTriangle } from "lucide-react";
+import { Package, ClipboardList, Tag, TrendingUp, AlertTriangle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAdminStore } from "@/stores/adminStore";
 import { formatPrice } from "@/lib/formatters";
+import { fetchAllOrders } from "@/api/orders";
+import { fetchProducts } from "@/services/api";
 
 export default function AdminDashboard() {
-  const { products, orders, promoCodes } = useAdminStore();
+  const { promoCodes } = useAdminStore();
 
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  const { data: ordersData, isLoading: ordersLoading } = useQuery({
+    queryKey: ["admin-orders", 0],
+    queryFn: () => fetchAllOrders(0, 100),
+  });
+
+  const { data: productsData, isLoading: productsLoading } = useQuery({
+    queryKey: ["admin-products"],
+    queryFn: () => fetchProducts({ limit: 100 }),
+  });
+
+  if (ordersLoading || productsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const orders = ordersData?.content || [];
+  const products = productsData?.products || [];
+
+  const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const lowStock = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity <= 5);
   const outOfStock = products.filter((p) => !p.inStock);
 
   const stats = [
     { label: "Total Products", value: products.length, icon: Package, href: "/admin/products", color: "text-blue-600 bg-blue-50" },
-    { label: "Total Orders", value: orders.length, icon: ClipboardList, href: "/admin/orders", color: "text-green-600 bg-green-50" },
-    { label: "Revenue", value: formatPrice(totalRevenue), icon: TrendingUp, href: "/admin/orders", color: "text-primary bg-primary/10" },
+    { label: "Total Orders", value: ordersData?.totalElements || 0, icon: ClipboardList, href: "/admin/orders", color: "text-green-600 bg-green-50" },
+    { label: "Revenue", value: `KSH ${totalRevenue.toLocaleString()}`, icon: TrendingUp, href: "/admin/orders", color: "text-primary bg-primary/10" },
     { label: "Active Promos", value: promoCodes.filter((p) => p.active).length, icon: Tag, href: "/admin/promotions", color: "text-purple-600 bg-purple-50" },
   ];
 
@@ -74,13 +98,13 @@ export default function AdminDashboard() {
         ) : (
           <div className="space-y-3">
             {orders.slice(0, 5).map((order) => (
-              <div key={order.id} className="flex items-center justify-between text-sm py-2 border-t border-border">
+              <div key={order.orderId} className="flex items-center justify-between text-sm py-2 border-t border-border">
                 <div>
-                  <span className="font-mono font-medium text-foreground">{order.id}</span>
+                  <span className="font-mono font-medium text-foreground">{order.orderNumber}</span>
                   <span className="ml-2 text-muted-foreground">{order.items.length} items</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="font-semibold text-foreground">{formatPrice(order.total)}</span>
+                  <span className="font-semibold text-foreground">KSH {order.totalAmount.toLocaleString()}</span>
                   <span className="capitalize text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">{order.status}</span>
                 </div>
               </div>
