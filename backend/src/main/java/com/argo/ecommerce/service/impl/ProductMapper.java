@@ -2,6 +2,10 @@ package com.argo.ecommerce.service.impl;
 
 import com.argo.ecommerce.dto.response.ProductResponse;
 import com.argo.ecommerce.entity.Product;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -10,6 +14,13 @@ import java.util.List;
 
 @Component
 public class ProductMapper {
+
+    private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(ProductMapper.class);
+
+    public ProductMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     public ProductResponse toResponse(Product p) {
         return ProductResponse.builder()
@@ -31,8 +42,8 @@ public class ProductMapper {
                 .rating(p.getRating())
                 .reviewCount(p.getReviewCount())
                 .warranty(p.getWarranty())
-                .specifications(p.getSpecifications())
-                .features(p.getFeatures())
+                .specifications(parseJson(p.getSpecifications()))
+                .features(parseJson(p.getFeatures()))
                 .category(ProductResponse.CategoryInfo.builder()
                         .id(p.getCategory().getId())
                         .name(p.getCategory().getName())
@@ -40,6 +51,18 @@ public class ProductMapper {
                         .build())
                 .createdAt(p.getCreatedAt() != null ? p.getCreatedAt().toString() : null)
                 .build();
+    }
+
+    private Object parseJson(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readTree(json);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse JSON field: {}", json, e);
+            return json; // Fallback to raw string if parsing fails
+        }
     }
 
     private List<String> parseImages(String additionalImages) {

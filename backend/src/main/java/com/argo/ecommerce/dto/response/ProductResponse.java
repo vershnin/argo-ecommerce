@@ -10,7 +10,8 @@ public class ProductResponse {
     private BigDecimal price, discountPrice, effectivePrice;
     private Integer stockQuantity;
     private boolean inStock;
-    private String sku, badge, warranty, specifications, features, createdAt;
+    private String sku, badge, warranty, createdAt;
+    private Object specifications, features;
     private Double rating;
     private Integer reviewCount;
     private CategoryInfo category;
@@ -35,8 +36,8 @@ public class ProductResponse {
     public Double getRating() { return rating; }
     public Integer getReviewCount() { return reviewCount; }
     public String getWarranty() { return warranty; }
-    public String getSpecifications() { return specifications; }
-    public String getFeatures() { return features; }
+    public Object getSpecifications() { return specifications; }
+    public Object getFeatures() { return features; }
     public CategoryInfo getCategory() { return category; }
     public String getCreatedAt() { return createdAt; }
 
@@ -61,8 +62,8 @@ public class ProductResponse {
         public Builder rating(Double v) { r.rating = v; return this; }
         public Builder reviewCount(Integer v) { r.reviewCount = v; return this; }
         public Builder warranty(String v) { r.warranty = v; return this; }
-        public Builder specifications(String v) { r.specifications = v; return this; }
-        public Builder features(String v) { r.features = v; return this; }
+        public Builder specifications(Object v) { r.specifications = v; return this; }
+        public Builder features(Object v) { r.features = v; return this; }
         public Builder category(CategoryInfo v) { r.category = v; return this; }
         public Builder createdAt(String v) { r.createdAt = v; return this; }
         public ProductResponse build() { return r; }
