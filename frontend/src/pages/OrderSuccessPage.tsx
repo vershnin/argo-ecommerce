@@ -1,13 +1,18 @@
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Package, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function OrderSuccessPage() {
   const location = useLocation();
-  const { orderId, orderNumber } = (location.state as {
-    orderId?: number;
+  const [searchParams] = useSearchParams();
+  
+  const state = location.state as {
+    orderId?: string | number;
     orderNumber?: string;
-  }) ?? {};
+  } | null;
+
+  const orderId = state?.orderId || searchParams.get('orderId');
+  const orderNumber = state?.orderNumber || state?.orderId || searchParams.get('orderId');
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">

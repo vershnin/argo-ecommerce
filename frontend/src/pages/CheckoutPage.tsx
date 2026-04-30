@@ -87,7 +87,12 @@ export default function CheckoutPage() {
       }
 
       clearCart();
-      navigate(`/order-success?orderId=${result.orderId}`);
+      navigate('/order-success', { 
+        state: { 
+          orderId: result.orderId,
+          orderNumber: result.orderId 
+        } 
+      });
     } catch {
       toast({ title: "Something went wrong", variant: "destructive" });
     } finally {
