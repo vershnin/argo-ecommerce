@@ -23,10 +23,13 @@ export async function fetchProducts(params?: {
   page?: number;
   limit?: number;
 }): Promise<{ products: Product[]; total: number }> {
+  const categoryValue = params?.category === 'all' ? undefined : params?.category;
+  const categoryId = categoryValue && /^\d+$/.test(categoryValue) ? Number(categoryValue) : undefined;
+
   const response = await api.get<PageResponse<Product>>('/products', {
     params: {
       keyword: params?.search,
-      categoryId: params?.category === 'all' ? undefined : params?.category,
+      categoryId,
       minPrice: params?.minPrice,
       maxPrice: params?.maxPrice,
       inStock: params?.inStock,

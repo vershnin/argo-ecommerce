@@ -81,7 +81,7 @@ export default function ProductDetailPage() {
         <ChevronRight className="w-4 h-4" />
         <Link to="/shop" className="hover:text-foreground transition-colors">Shop</Link>
         <ChevronRight className="w-4 h-4" />
-        <Link to={`/shop?category=${product.category.slug}`} className="hover:text-foreground transition-colors">
+        <Link to={`/shop?category=${product.category.id}`} className="hover:text-foreground transition-colors">
           {product.category.name}
         </Link>
         <ChevronRight className="w-4 h-4" />

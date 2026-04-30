@@ -29,15 +29,31 @@ export default function ShopPage() {
   const maxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
   const [priceRange, setPriceRange] = useState<[number, number]>([minPrice || 0, maxPrice || 200000]);
 
+  const selectedCategoryId =
+    category !== "all" && /^\d+$/.test(category)
+      ? category
+      : categories.find((c) => c.id === category || c.name.toLowerCase() === category.toLowerCase())?.id;
+
   useEffect(() => {
     fetchCategories().then(setCategories);
   }, []);
 
   useEffect(() => {
+    if (!categories.length) return;
+    if (category === "all" || /^\d+$/.test(category)) return;
+    const matched = categories.find((c) => c.name.toLowerCase() === category.toLowerCase());
+    if (matched) {
+      const params = new URLSearchParams(searchParams);
+      params.set("category", matched.id);
+      setSearchParams(params, { replace: true });
+    }
+  }, [categories, category, searchParams, setSearchParams]);
+
+  useEffect(() => {
     setLoading(true);
     fetchProducts({
       search: search || undefined,
-      category: category !== "all" ? category : undefined,
+      category: selectedCategoryId,
       brand: selectedBrands.length ? selectedBrands.join(",") : undefined,
       minPrice,
       maxPrice,
@@ -49,7 +65,7 @@ export default function ShopPage() {
       setTotal(r.total);
       setLoading(false);
     });
-  }, [search, category, sort, selectedBrands.join(","), inStockOnly, minPrice, maxPrice]);
+  }, [search, selectedCategoryId, category, sort, selectedBrands.join(","), inStockOnly, minPrice, maxPrice]);
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
