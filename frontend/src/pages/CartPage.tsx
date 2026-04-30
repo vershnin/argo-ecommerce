@@ -8,10 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/formatters";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, getTotal, clearCart } = useCartStore();
+  const { items, removeItem, updateQuantity, totalAmount: total } = useCartStore();
   const { addItem: addToWishlist, isInWishlist } = useWishlistStore();
   const { toast } = useToast();
-  const total = getTotal();
 
   if (items.length === 0) {
     return (
@@ -34,45 +33,28 @@ export default function CartPage() {
         {/* Cart items */}
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => {
-            const price = item.product.discountPrice || item.product.price;
             return (
-              <div key={item.product.id} className="flex gap-4 p-4 rounded-xl border border-border bg-card">
-                <Link to={`/product/${item.product.slug}`} className="w-24 h-24 bg-secondary/50 rounded-lg p-2 shrink-0 flex items-center justify-center">
-                  <img src={item.product.imageUrl} alt={item.product.name} className="w-full h-full object-contain" />
-                </Link>
+              <div key={item.cartItemId} className="flex gap-4 p-4 rounded-xl border border-border bg-card">
+                <div className="w-24 h-24 bg-secondary/50 rounded-lg p-2 shrink-0 flex items-center justify-center">
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <Link to={`/product/${item.product.slug}`} className="font-medium text-sm hover:text-primary transition-colors line-clamp-2">
-                    {item.product.name}
-                  </Link>
-                  <p className="text-xs text-muted-foreground mt-1">{item.product.brand}</p>
+                  <h3 className="font-medium text-sm transition-colors line-clamp-2">
+                    {item.name}
+                  </h3>
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center border border-border rounded-lg">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.productId, item.quantity - 1)}>
                         <Minus className="w-3 h-3" />
                       </Button>
                       <span className="w-8 text-center text-sm">{item.quantity}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.productId, item.quantity + 1)}>
                         <Plus className="w-3 h-3" />
                       </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm">{formatPrice(price * item.quantity)}</span>
-                      {!isInWishlist(item.product.id) && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-primary"
-                          title="Save for later"
-                          onClick={() => {
-                            addToWishlist(item.product);
-                            removeItem(item.product.id);
-                            toast({ title: "Saved for later", description: item.product.name });
-                          }}
-                        >
-                          <Heart className="w-4 h-4" />
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeItem(item.product.id)}>
+                      <span className="font-bold text-sm">{formatPrice(item.subtotal)}</span>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeItem(item.cartItemId)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>

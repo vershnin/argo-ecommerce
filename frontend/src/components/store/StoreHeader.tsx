@@ -21,7 +21,7 @@ export function StoreHeader() {
   const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const cartCount = useCartStore((s) => s.getItemCount());
+  const cartCount = useCartStore((s) => s.itemCount);
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const { isAuthenticated, user, logout } = useAuthStore();
 

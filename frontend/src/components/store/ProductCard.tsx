@@ -19,11 +19,11 @@ export function ProductCard({ product }: ProductCardProps) {
   const inWishlist = useWishlistStore((s) => s.isInWishlist(product.id));
   const { toast } = useToast();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!product.inStock) return;
-    addToCart(product);
+    await addToCart(product);
     toast({ title: "Added to cart", description: product.name });
   };
 

@@ -16,12 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Order } from "@/types/product";
 
 export default function CheckoutPage() {
-  const { items, getTotal, clearCart } = useCartStore();
+  const { items, totalAmount: subtotal, clearCart } = useCartStore();
   const { addOrder: addAuthOrder, isAuthenticated } = useAuthStore();
-  const { addOrder: addAdminOrder } = useAdminStore();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const subtotal = getTotal();
 
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
   const [promoCode, setPromoCode] = useState("");
@@ -187,9 +183,9 @@ export default function CheckoutPage() {
               <h2 className="font-bold text-lg mb-4">Order Summary</h2>
               <div className="space-y-3 mb-4 max-h-48 overflow-auto">
                 {items.map(item => (
-                  <div key={item.product.id} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground truncate mr-2">{item.product.name} × {item.quantity}</span>
-                    <span className="shrink-0">{formatPrice((item.product.discountPrice || item.product.price) * item.quantity)}</span>
+                  <div key={item.cartItemId} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground truncate mr-2">{item.name} × {item.quantity}</span>
+                    <span className="shrink-0">{formatPrice(item.subtotal)}</span>
                   </div>
                 ))}
               </div>

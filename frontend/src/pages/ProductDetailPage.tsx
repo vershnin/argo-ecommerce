@@ -68,8 +68,8 @@ export default function ProductDetailPage() {
 
   const inWishlist = isInWishlist(product.id);
 
-  const handleAddToCart = () => {
-    addToCart(product, quantity);
+  const handleAddToCart = async () => {
+    await addToCart(product, quantity);
     toast({ title: "Added to cart", description: `${quantity}x ${product.name}` });
   };
 
