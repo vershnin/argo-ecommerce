@@ -1,6 +1,6 @@
 package com.argo.ecommerce.controller;
 
-import com.argo.ecommerce.entity.Category;
+import com.argo.ecommerce.dto.response.CategoryResponse;
 import com.argo.ecommerce.exception.ResourceNotFoundException;
 import com.argo.ecommerce.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,16 +20,16 @@ public class CategoryController {
      * GET /api/categories
      */
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
-        return ResponseEntity.ok(categoryRepository.findAll());
+    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
+        return ResponseEntity.ok(categoryRepository.findAllWithProductCount());
     }
 
     /**
      * GET /api/categories/{slug}
      */
     @GetMapping("/{slug}")
-    public ResponseEntity<Category> getCategoryBySlug(@PathVariable String slug) {
-        Category cat = categoryRepository.findBySlug(slug)
+    public ResponseEntity<CategoryResponse> getCategoryBySlug(@PathVariable String slug) {
+        CategoryResponse cat = categoryRepository.findResponseBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + slug));
         return ResponseEntity.ok(cat);
     }
