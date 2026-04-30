@@ -1,6 +1,7 @@
 package com.argo.ecommerce.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Formula;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +14,10 @@ public class Category {
     @Column(unique = true, nullable = false) private String slug;
     private String description;
     private String iconName;
+
+    @Formula("(select count(*) from products p where p.category_id = id)")
+    private Long productCount;
+
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Product> products = new ArrayList<>();
 
@@ -26,5 +31,6 @@ public class Category {
     public void setDescription(String description) { this.description = description; }
     public String getIconName() { return iconName; }
     public void setIconName(String iconName) { this.iconName = iconName; }
+    public Long getProductCount() { return productCount; }
     public List<Product> getProducts() { return products; }
 }

@@ -48,6 +48,7 @@ public class ProductMapper {
                         .id(p.getCategory().getId())
                         .name(p.getCategory().getName())
                         .slug(p.getCategory().getSlug())
+                        .productCount(p.getCategory().getProductCount())
                         .build())
                 .createdAt(p.getCreatedAt() != null ? p.getCreatedAt().toString() : null)
                 .build();

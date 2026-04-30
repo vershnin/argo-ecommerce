@@ -72,10 +72,12 @@ public class ProductResponse {
     public static class CategoryInfo {
         private Long id;
         private String name, slug;
+        private Long productCount;
         public CategoryInfo() {}
         public Long getId() { return id; }
         public String getName() { return name; }
         public String getSlug() { return slug; }
+        public Long getProductCount() { return productCount; }
 
         public static Builder builder() { return new Builder(); }
         public static class Builder {
@@ -83,6 +85,7 @@ public class ProductResponse {
             public Builder id(Long v) { c.id = v; return this; }
             public Builder name(String v) { c.name = v; return this; }
             public Builder slug(String v) { c.slug = v; return this; }
+            public Builder productCount(Long v) { c.productCount = v; return this; }
             public CategoryInfo build() { return c; }
         }
     }
