@@ -78,6 +78,7 @@ export interface PromoCode {
   code: string;
   type: 'percentage' | 'fixed';
   value: number;
+  discount?: number;
   minOrder?: number;
   expiresAt: string;
   active: boolean;

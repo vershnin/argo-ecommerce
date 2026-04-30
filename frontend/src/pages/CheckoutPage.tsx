@@ -18,6 +18,9 @@ import { Order } from "@/types/product";
 export default function CheckoutPage() {
   const { items, totalAmount: subtotal, clearCart } = useCartStore();
   const { addOrder: addAuthOrder, isAuthenticated } = useAuthStore();
+  const addAdminOrder = useAdminStore((s) => s.addOrder);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
   const [promoCode, setPromoCode] = useState("");
@@ -42,9 +45,11 @@ export default function CheckoutPage() {
   const handlePromo = async () => {
     const result = await validatePromoCode(promoCode, subtotal);
     if (result.valid && result.promo) {
-      const disc = result.promo.type === 'percentage'
-        ? Math.round(subtotal * result.promo.value / 100)
-        : result.promo.value;
+      const disc = result.promo.discount ?? (
+        result.promo.type === 'percentage'
+          ? Math.round(subtotal * result.promo.value / 100)
+          : result.promo.value
+      );
       setDiscount(disc);
       setPromoApplied(true);
       toast({ title: "Promo code applied!", description: `You save ${formatPrice(disc)}` });
@@ -69,7 +74,7 @@ export default function CheckoutPage() {
 
       const order: Order = {
         id: result.orderId,
-        items: [...items],
+        items: [...items] as any,
         subtotal,
         deliveryFee,
         discount,

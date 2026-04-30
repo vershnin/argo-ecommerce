@@ -98,8 +98,15 @@ export async function submitReview(productId: string, review: { rating: number; 
 
 export async function validatePromoCode(code: string, orderTotal: number): Promise<{ valid: boolean; promo?: PromoCode; message?: string }> {
   try {
-    const response = await api.post('/coupons/validate', { code, orderTotal });
-    return { valid: true, promo: response.data };
+    const response = await api.post<any>('/coupons/validate', { code, orderTotal });
+    const promo: PromoCode = {
+      ...response.data,
+      type: response.data.type?.toLowerCase(),
+      discount: response.data.discount !== undefined ? Number(response.data.discount) : undefined,
+      value: Number(response.data.value),
+    };
+
+    return { valid: true, promo };
   } catch (error: any) {
     return { valid: false, message: error.response?.data?.message || 'Invalid promo code' };
   }
