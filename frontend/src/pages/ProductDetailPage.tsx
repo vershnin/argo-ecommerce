@@ -7,12 +7,14 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ProductImageGallery } from "@/components/store/ProductImageGallery";
+import { ReviewForm } from "@/components/store/ReviewForm";
 import { ProductJsonLd } from "@/components/ProductJsonLd";
 import { fetchProductBySlug, fetchRelatedProducts, fetchReviews } from "@/services/api";
 import { Product, Review } from "@/types/product";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/stores/authStore";
 import { formatPrice, getDiscountPercentage } from "@/lib/formatters";
 
 export default function ProductDetailPage() {
@@ -24,6 +26,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const addToCart = useCartStore((s) => s.addItem);
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
+  const { isAuthenticated } = useAuthStore();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -71,6 +74,10 @@ export default function ProductDetailPage() {
   const handleAddToCart = async () => {
     await addToCart(product, quantity);
     toast({ title: "Added to cart", description: `${quantity}x ${product.name}` });
+  };
+
+  const handleReviewSubmitted = (newReview: Review) => {
+    setReviews([newReview, ...reviews]);
   };
 
   return (
@@ -262,31 +269,47 @@ export default function ProductDetailPage() {
         </TabsContent>
 
         <TabsContent value="reviews" className="pt-6">
-          {reviews.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No reviews yet. Be the first to review this product!</p>
-          ) : (
-            <div className="space-y-6 max-w-2xl">
-              {reviews.map((review) => (
-                <div key={review.id} className="border-b border-border pb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-border'}`} />
-                      ))}
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-2">
+              {reviews.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No reviews yet. Be the first to review this product!</p>
+              ) : (
+                <div className="space-y-6">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="border-b border-border pb-6 last:border-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-border'}`} />
+                          ))}
+                        </div>
+                        {review.verified && (
+                          <Badge variant="secondary" className="text-[10px]">✓ Verified</Badge>
+                        )}
+                      </div>
+                      <h4 className="font-medium text-sm mb-1">{review.title}</h4>
+                      <p className="text-sm text-muted-foreground mb-2">{review.comment}</p>
+                      <p className="text-xs text-muted-foreground">
+                        By {review.userName} • {new Date(review.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
-                    {review.verified && (
-                      <Badge variant="secondary" className="text-[10px]">✓ Verified</Badge>
-                    )}
-                  </div>
-                  <h4 className="font-medium text-sm mb-1">{review.title}</h4>
-                  <p className="text-sm text-muted-foreground mb-2">{review.comment}</p>
-                  <p className="text-xs text-muted-foreground">
-                    By {review.userName} • {new Date(review.createdAt).toLocaleDateString()}
-                  </p>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
+            <div>
+              {isAuthenticated ? (
+                <ReviewForm productId={product.id} onReviewSubmitted={handleReviewSubmitted} />
+              ) : (
+                <div className="bg-secondary/30 p-6 rounded-xl border border-border text-center">
+                  <p className="text-sm text-muted-foreground mb-4">Please log in to share your feedback</p>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/login">Login to Review</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 

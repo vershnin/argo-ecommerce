@@ -143,6 +143,16 @@ export async function register(data: any): Promise<AuthResponse> {
   return response.data;
 }
 
+export async function updateProfile(data: { fullName: string; phone?: string; avatarUrl?: string }): Promise<UserProfile> {
+  const response = await api.put<UserProfile>('/users/me', data);
+  return response.data;
+}
+
+export async function mergeCart(items: { productId: number; quantity: number }[]): Promise<any> {
+  const response = await api.post('/cart/merge', { items });
+  return response.data;
+}
+
 // ─── Admin ───────────────────────────────────────────────────
 
 export interface AdminProductRequest {
@@ -176,6 +186,21 @@ export async function adminUpdateProduct(id: number, data: AdminProductRequest):
 
 export async function adminDeleteProduct(id: number): Promise<void> {
   await api.delete(`/admin/products/${id}`);
+}
+
+// Category Admin
+export async function adminCreateCategory(data: any): Promise<Category> {
+  const response = await api.post<Category>('/admin/categories', data);
+  return response.data;
+}
+
+export async function adminUpdateCategory(id: number, data: any): Promise<Category> {
+  const response = await api.put<Category>(`/admin/categories/${id}`, data);
+  return response.data;
+}
+
+export async function adminDeleteCategory(id: number): Promise<void> {
+  await api.delete(`/admin/categories/${id}`);
 }
 
 // ─── Wishlist ────────────────────────────────────────────────
