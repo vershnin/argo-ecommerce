@@ -25,4 +25,13 @@ public class CartRequest {
         public Integer getQuantity() { return quantity; }
         public void setQuantity(Integer quantity) { this.quantity = quantity; }
     }
+
+    public static class MergeRequest {
+        @NotEmpty(message = "Items to merge cannot be empty")
+        private java.util.List<AddItem> items;
+
+        public MergeRequest() {}
+        public java.util.List<AddItem> getItems() { return items; }
+        public void setItems(java.util.List<AddItem> items) { this.items = items; }
+    }
 }

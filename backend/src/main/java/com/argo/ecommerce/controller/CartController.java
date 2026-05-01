@@ -70,4 +70,15 @@ public class CartController {
         cartService.clearCart(principal.getId());
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * POST /api/cart/merge
+     * Body: { items: [{ productId, quantity }, ...] }
+     */
+    @PostMapping("/merge")
+    public ResponseEntity<CartResponse> mergeCart(
+            @Valid @RequestBody CartRequest.MergeRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(cartService.mergeCart(principal.getId(), request));
+    }
 }

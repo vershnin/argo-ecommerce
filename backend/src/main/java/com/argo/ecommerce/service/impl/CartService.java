@@ -127,6 +127,40 @@ public class CartService {
         });
     }
 
+    @Transactional
+    public CartResponse mergeCart(Long userId, CartRequest.MergeRequest request) {
+        Cart cart = cartRepository.findByUserIdWithItems(userId)
+                .orElseGet(() -> createEmptyCart(userId));
+
+        for (CartRequest.AddItem itemRequest : request.getItems()) {
+            Product product = productRepository.findById(itemRequest.getProductId())
+                    .orElse(null); // Skip if product doesn't exist anymore
+
+            if (product == null || !product.isInStock()) continue;
+
+            cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())
+                    .ifPresentOrElse(
+                            existing -> {
+                                int newQty = existing.getQuantity() + itemRequest.getQuantity();
+                                // Cap at stock quantity
+                                existing.setQuantity(Math.min(newQty, product.getStockQuantity()));
+                                cartItemRepository.save(existing);
+                            },
+                            () -> {
+                                CartItem item = CartItem.builder()
+                                        .cart(cart)
+                                        .product(product)
+                                        .quantity(Math.min(itemRequest.getQuantity(), product.getStockQuantity()))
+                                        .build();
+                                cartItemRepository.save(item);
+                            }
+                    );
+        }
+
+        Cart refreshed = cartRepository.findByUserIdWithItems(userId).orElseThrow();
+        return toResponse(refreshed);
+    }
+
     // ── Helpers ────────────────────────────────────────────────
 
     private Cart createEmptyCart(Long userId) {

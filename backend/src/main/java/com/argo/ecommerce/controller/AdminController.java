@@ -1,9 +1,12 @@
 package com.argo.ecommerce.controller;
 
+import com.argo.ecommerce.dto.request.CategoryRequest;
 import com.argo.ecommerce.dto.request.ProductRequest;
+import com.argo.ecommerce.dto.response.CategoryResponse;
 import com.argo.ecommerce.dto.response.OrderResponse;
 import com.argo.ecommerce.dto.response.PageResponse;
 import com.argo.ecommerce.dto.response.ProductResponse;
+import com.argo.ecommerce.service.impl.CategoryService;
 import com.argo.ecommerce.service.impl.OrderService;
 import com.argo.ecommerce.service.impl.ProductService;
 import jakarta.validation.Valid;
@@ -28,6 +31,38 @@ public class AdminController {
 
     private final ProductService productService;
     private final OrderService orderService;
+    private final CategoryService categoryService;
+
+    // ── Categories ─────────────────────────────────────────────
+
+    /**
+     * POST /api/admin/categories
+     */
+    @PostMapping("/categories")
+    public ResponseEntity<CategoryResponse> createCategory(
+            @Valid @RequestBody CategoryRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(categoryService.createCategory(request));
+    }
+
+    /**
+     * PUT /api/admin/categories/{id}
+     */
+    @PutMapping("/categories/{id}")
+    public ResponseEntity<CategoryResponse> updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryRequest request) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, request));
+    }
+
+    /**
+     * DELETE /api/admin/categories/{id}
+     */
+    @DeleteMapping("/categories/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.noContent().build();
+    }
 
     // ── Products ───────────────────────────────────────────────
 
