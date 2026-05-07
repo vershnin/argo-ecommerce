@@ -46,8 +46,9 @@ export const useAdminStore = create<AdminStore>()(
         try {
           const { products } = await api.fetchProducts({ limit: 100 });
           set({ products, loading: false });
-        } catch (err: any) {
-          set({ error: err.message, loading: false });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Failed to fetch products';
+          set({ error: message, loading: false });
         }
       },
 
@@ -56,8 +57,9 @@ export const useAdminStore = create<AdminStore>()(
         try {
           const newProduct = await api.adminCreateProduct(productData);
           set((s) => ({ products: [newProduct, ...s.products], loading: false }));
-        } catch (err: any) {
-          set({ error: err.message, loading: false });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Failed to add product';
+          set({ error: message, loading: false });
           throw err;
         }
       },
@@ -70,8 +72,9 @@ export const useAdminStore = create<AdminStore>()(
             products: s.products.map((p) => (p.id === id ? updatedProduct : p)),
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message, loading: false });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Failed to update product';
+          set({ error: message, loading: false });
           throw err;
         }
       },
@@ -84,8 +87,9 @@ export const useAdminStore = create<AdminStore>()(
             products: s.products.filter((p) => p.id !== id),
             loading: false
           }));
-        } catch (err: any) {
-          set({ error: err.message, loading: false });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Failed to delete product';
+          set({ error: message, loading: false });
           throw err;
         }
       },
