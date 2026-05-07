@@ -6,6 +6,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/formatters";
+import type { Product } from "@/types/product";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalAmount: total } = useCartStore();
@@ -60,17 +61,31 @@ export default function CartPage() {
                         className={`h-8 w-8 ${isInWishlist(item.productId) ? 'text-primary' : 'text-muted-foreground'}`}
                         onClick={async () => {
                           if (isInWishlist(item.productId)) {
-                            // Already in wishlist, maybe do nothing or remove
                             toast({ title: "Already in wishlist" });
                           } else {
-                            await addToWishlist({
+                            const product: Product = {
                               id: item.productId,
                               name: item.name,
-                              imageUrl: item.imageUrl,
+                              slug: item.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+                              category: { id: 'unknown', name: 'Uncategorized', slug: 'uncategorized' },
+                              brand: '',
                               price: item.price,
-                              // Other fields might be missing but for wishlist usually minimal info is enough
-                              // or we should fetch the full product
-                            } as any);
+                              effectivePrice: item.price,
+                              description: item.name,
+                              shortDescription: item.name,
+                              imageUrl: item.imageUrl,
+                              additionalImages: [],
+                              specifications: {},
+                              features: [],
+                              sku: String(item.productId),
+                              stockQuantity: item.stockQuantity,
+                              inStock: item.stockQuantity > 0,
+                              rating: 0,
+                              reviewCount: 0,
+                              createdAt: new Date().toISOString(),
+                            };
+
+                            await addToWishlist(product);
                             toast({ title: "Added to wishlist" });
                           }
                         }}
