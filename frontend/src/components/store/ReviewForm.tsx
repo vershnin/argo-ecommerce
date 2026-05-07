@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { isAxiosError } from "axios";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,7 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (rating === 0) {
       toast({ title: "Rating required", description: "Please select a rating", variant: "destructive" });
@@ -36,10 +37,13 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
       setTitle("");
       setComment("");
       setRating(5);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = isAxiosError(error)
+        ? (error.response?.data as { message?: string })?.message ?? "Failed to submit review"
+        : "Failed to submit review";
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to submit review",
+        description: message,
         variant: "destructive",
       });
     } finally {
