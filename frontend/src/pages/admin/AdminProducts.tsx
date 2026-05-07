@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Search, Edit2, Trash2, Package, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,19 +34,19 @@ export default function AdminProducts() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchProducts();
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       const data = await fetchCategories();
       setCategories(data);
-    } catch (error) {
+    } catch (error: unknown) {
       toast({ title: "Error", description: "Failed to load categories", variant: "destructive" });
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchProducts();
+    loadCategories();
+  }, [fetchProducts, loadCategories]);
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
