@@ -13,7 +13,7 @@ import { useAdminStore } from "@/stores/adminStore";
 import { formatPrice } from "@/lib/formatters";
 import { createOrder, validatePromoCode } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { Order } from "@/types/product";
+import { Address, Order } from "@/types/product";
 
 export default function CheckoutPage() {
   const { items, totalAmount: subtotal, clearCart } = useCartStore();
@@ -28,9 +28,14 @@ export default function CheckoutPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const [form, setForm] = useState({
-    fullName: "", phone: "", email: "",
-    street: "", city: "Nairobi", region: "Nairobi", notes: "",
+  const [form, setForm] = useState<Address>({
+    fullName: "",
+    phone: "",
+    email: "",
+    street: "",
+    city: "Nairobi",
+    region: "Nairobi",
+    notes: "",
   });
 
   const deliveryFees: Record<string, number> = {
@@ -72,9 +77,34 @@ export default function CheckoutPage() {
         promoCode: promoApplied ? promoCode : undefined,
       });
 
+      const orderItems = items.map((item) => ({
+        product: {
+          id: item.productId,
+          name: item.name,
+          slug: item.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+          category: { id: 'unknown', name: 'Uncategorized', slug: 'uncategorized' },
+          brand: '',
+          price: item.price,
+          effectivePrice: item.price,
+          description: item.name,
+          shortDescription: item.name,
+          imageUrl: item.imageUrl,
+          additionalImages: [],
+          specifications: {},
+          features: [],
+          sku: String(item.productId),
+          stockQuantity: item.stockQuantity,
+          inStock: item.stockQuantity > 0,
+          rating: 0,
+          reviewCount: 0,
+          createdAt: new Date().toISOString(),
+        },
+        quantity: item.quantity,
+      })) as Order['items'];
+
       const order: Order = {
         id: result.orderId,
-        items: [...items] as any,
+        items: orderItems,
         subtotal,
         deliveryFee,
         discount,
