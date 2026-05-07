@@ -34,6 +34,8 @@ export default function ShopPage() {
       ? category
       : categories.find((c) => c.id === category || c.name.toLowerCase() === category.toLowerCase())?.id;
 
+  const selectedBrandsKey = selectedBrands.join(",");
+
   useEffect(() => {
     fetchCategories().then(setCategories);
   }, []);
@@ -54,7 +56,7 @@ export default function ShopPage() {
     fetchProducts({
       search: search || undefined,
       category: selectedCategoryId,
-      brand: selectedBrands.length ? selectedBrands.join(",") : undefined,
+      brand: selectedBrands.length ? selectedBrandsKey : undefined,
       minPrice,
       maxPrice,
       inStock: inStockOnly || undefined,
@@ -65,7 +67,7 @@ export default function ShopPage() {
       setTotal(r.total);
       setLoading(false);
     });
-  }, [search, selectedCategoryId, category, sort, selectedBrands.join(","), inStockOnly, minPrice, maxPrice]);
+  }, [search, selectedCategoryId, category, sort, selectedBrandsKey, selectedBrands.length, inStockOnly, minPrice, maxPrice]);
 
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
