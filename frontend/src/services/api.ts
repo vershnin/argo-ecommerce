@@ -1,5 +1,5 @@
 import { apiClient as api } from '@/api/client';
-import { Product, Review, PromoCode, Category } from '@/types/product';
+import { Product, Review, PromoCode, Category, Address } from '@/types/product';
 import { UserProfile } from '@/stores/authStore';
 
 interface PageResponse<T> {
@@ -8,6 +8,46 @@ interface PageResponse<T> {
   totalPages: number;
   size: number;
   number: number;
+}
+
+interface CategoryApiResponse {
+  id: number | string;
+  name: string;
+  description?: string;
+  productCount?: number;
+}
+
+interface CouponResponse {
+  code: string;
+  type: string;
+  discount?: number;
+  value: number;
+  message?: string;
+  expiresAt?: string;
+  active?: boolean;
+}
+
+interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  phone?: string;
+}
+
+interface AdminCategoryRequest {
+  name: string;
+  description?: string;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: { message?: unknown } } }).response;
+    if (response?.data?.message && typeof response.data.message === 'string') {
+      return response.data.message;
+    }
+  }
+  return fallback;
 }
 
 // ─── Products ────────────────────────────────────────────────
@@ -65,7 +105,7 @@ export async function fetchRelatedProducts(productId: number, limit: number = 4)
 // ─── Categories ──────────────────────────────────────────────
 
 export async function fetchCategories(): Promise<Category[]> {
-  const response = await api.get<any[]>('/categories');
+  const response = await api.get<CategoryApiResponse[]>('/categories');
   
   const iconMap: Record<string, string> = {
     Audio: 'Headphones', Wearables: 'Watch', Storage: 'HardDrive',
@@ -98,17 +138,19 @@ export async function submitReview(productId: number, review: { rating: number; 
 
 export async function validatePromoCode(code: string, orderTotal: number): Promise<{ valid: boolean; promo?: PromoCode; message?: string }> {
   try {
-    const response = await api.post<any>('/coupons/validate', { code, orderTotal });
+    const response = await api.post<CouponResponse>('/coupons/validate', { code, orderTotal });
     const promo: PromoCode = {
       ...response.data,
-      type: response.data.type?.toLowerCase(),
+      type: response.data.type?.toLowerCase() as PromoCode['type'],
       discount: response.data.discount !== undefined ? Number(response.data.discount) : undefined,
       value: Number(response.data.value),
+      expiresAt: response.data.expiresAt ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      active: response.data.active ?? true,
     };
 
     return { valid: true, promo };
-  } catch (error: any) {
-    return { valid: false, message: error.response?.data?.message || 'Invalid promo code' };
+  } catch (error: unknown) {
+    return { valid: false, message: getErrorMessage(error, 'Invalid promo code') };
   }
 }
 
@@ -116,10 +158,10 @@ export async function validatePromoCode(code: string, orderTotal: number): Promi
 
 export async function createOrder(orderData: {
   deliveryMethod: string;
-  shippingAddress: any;
+  shippingAddress: Address;
   promoCode?: string;
 }): Promise<{ orderId: string; status: string }> {
-  const response = await api.post('/orders', orderData);
+  const response = await api.post<{ orderNumber: string; status: string }>('/orders', orderData);
   return {
     orderId: response.data.orderNumber,
     status: response.data.status,
@@ -138,7 +180,7 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return response.data;
 }
 
-export async function register(data: any): Promise<AuthResponse> {
+export async function register(data: RegisterRequest): Promise<AuthResponse> {
   const response = await api.post<AuthResponse>('/auth/register', data);
   return response.data;
 }
@@ -148,7 +190,7 @@ export async function updateProfile(data: { fullName: string; phone?: string; av
   return response.data;
 }
 
-export async function mergeCart(items: { productId: number; quantity: number }[]): Promise<any> {
+export async function mergeCart(items: { productId: number; quantity: number }[]): Promise<unknown> {
   const response = await api.post('/cart/merge', { items });
   return response.data;
 }
@@ -189,12 +231,12 @@ export async function adminDeleteProduct(id: number): Promise<void> {
 }
 
 // Category Admin
-export async function adminCreateCategory(data: any): Promise<Category> {
+export async function adminCreateCategory(data: AdminCategoryRequest): Promise<Category> {
   const response = await api.post<Category>('/admin/categories', data);
   return response.data;
 }
 
-export async function adminUpdateCategory(id: number, data: any): Promise<Category> {
+export async function adminUpdateCategory(id: number, data: AdminCategoryRequest): Promise<Category> {
   const response = await api.put<Category>(`/admin/categories/${id}`, data);
   return response.data;
 }
