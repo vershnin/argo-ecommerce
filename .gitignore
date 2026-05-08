@@ -1,11 +1,13 @@
 # Maven build output
 backend/target/
+backend/uploads/
 
 # Node / frontend
 frontend/node_modules/
 frontend/dist/
 frontend/.env
 frontend/.env.local
+backend/.env
 
 # TypeScript build cache
 *.tsbuildinfo
