@@ -245,6 +245,29 @@ export async function adminDeleteCategory(id: number): Promise<void> {
   await api.delete(`/admin/categories/${id}`);
 }
 
+// ─── File Upload ─────────────────────────────────────────────
+
+export async function uploadProductImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await api.post<{ success: boolean; message: string; data: string }>(
+    '/admin/upload/image',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  if (!response.data.success) {
+    throw new Error(response.data.message);
+  }
+
+  return response.data.data; // Returns the image URL
+}
+
 // ─── Wishlist ────────────────────────────────────────────────
 
 export async function fetchWishlist(): Promise<Product[]> {

@@ -15,7 +15,7 @@ import { useAdminStore } from "@/stores/adminStore";
 import { formatPrice } from "@/lib/formatters";
 import { useToast } from "@/hooks/use-toast";
 import { Product, Category } from "@/types/product";
-import { fetchCategories, AdminProductRequest } from "@/services/api";
+import { fetchCategories, AdminProductRequest, uploadProductImage } from "@/services/api";
 
 const emptyProduct = {
   name: "", categoryId: "", brand: "", price: 0, description: "",
@@ -33,6 +33,9 @@ export default function AdminProducts() {
   const [form, setForm] = useState(emptyProduct);
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
 
   const loadCategories = useCallback(async () => {
     try {
@@ -57,6 +60,8 @@ export default function AdminProducts() {
   const openAdd = () => {
     setEditing(null);
     setForm(emptyProduct);
+    setMainImageFile(null);
+    setAdditionalImageFiles([]);
     setDialogOpen(true);
   };
 
@@ -76,7 +81,40 @@ export default function AdminProducts() {
       imageUrl: p.imageUrl,
       additionalImages: p.additionalImages?.join(",") || "",
     });
+    setMainImageFile(null);
+    setAdditionalImageFiles([]);
     setDialogOpen(true);
+  };
+
+  const handleMainImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    try {
+      const imageUrl = await uploadProductImage(file);
+      setForm({ ...form, imageUrl });
+      setMainImageFile(null);
+      toast({ title: "Main image uploaded successfully" });
+    } catch (error: any) {
+      toast({ title: "Failed to upload image", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleAdditionalImageUpload = async (files: File[]) => {
+    setUploadingImage(true);
+    try {
+      const uploadPromises = files.map(file => uploadProductImage(file));
+      const urls = await Promise.all(uploadPromises);
+      const existingUrls = form.additionalImages ? form.additionalImages.split(',').map(url => url.trim()).filter(url => url) : [];
+      const newAdditionalImages = [...existingUrls, ...urls].join(', ');
+      setForm({ ...form, additionalImages: newAdditionalImages });
+      setAdditionalImageFiles([]);
+      toast({ title: `${urls.length} additional image(s) uploaded successfully` });
+    } catch (error: any) {
+      toast({ title: "Failed to upload images", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSave = async () => {
@@ -270,12 +308,57 @@ const handleDelete = async (id: number) => {
               <Input value={form.shortDescription} onChange={(e) => setForm({ ...form, shortDescription: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Main Image URL *</Label>
-              <Input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+              <Label>Main Image *</Label>
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setMainImageFile(file);
+                      handleMainImageUpload(file);
+                    }
+                  }}
+                  disabled={uploadingImage}
+                />
+                {uploadingImage && <p className="text-sm text-muted-foreground">Uploading...</p>}
+                {form.imageUrl && form.imageUrl !== "/placeholder.svg" && (
+                  <div className="flex items-center gap-2">
+                    <img src={form.imageUrl} alt="Main product" className="w-16 h-16 object-cover rounded" />
+                    <span className="text-sm text-muted-foreground">Current image</span>
+                  </div>
+                )}
+                <Input
+                  placeholder="Or enter image URL directly"
+                  value={form.imageUrl.startsWith('/uploads/') ? '' : form.imageUrl}
+                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>Additional Image URLs (comma separated)</Label>
-              <Input value={form.additionalImages} onChange={(e) => setForm({ ...form, additionalImages: e.target.value })} />
+              <Label>Additional Images</Label>
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (files.length > 0) {
+                      setAdditionalImageFiles(files);
+                      handleAdditionalImageUpload(files);
+                    }
+                  }}
+                  disabled={uploadingImage}
+                />
+                {uploadingImage && <p className="text-sm text-muted-foreground">Uploading...</p>}
+                <Input
+                  placeholder="Or enter image URLs (comma separated)"
+                  value={form.additionalImages}
+                  onChange={(e) => setForm({ ...form, additionalImages: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Full Description</Label>
