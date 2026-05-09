@@ -27,6 +27,9 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(AuthRequest.Register request) {
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new com.argo.ecommerce.exception.BadRequestException("Email is required");
+        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ConflictException("Email already registered: " + request.getEmail());
         }

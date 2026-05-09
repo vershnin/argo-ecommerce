@@ -45,6 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (!jwtService.validateToken(token)) {
+                log.warn("Invalid JWT token for request: {}", request.getRequestURI());
                 filterChain.doFilter(request, response);
                 return;
             }

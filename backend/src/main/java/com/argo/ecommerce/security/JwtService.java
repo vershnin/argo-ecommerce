@@ -88,10 +88,7 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        // Ensure the secret is base64-encoded and at least 256 bits
-        byte[] keyBytes = Decoders.BASE64.decode(
-                java.util.Base64.getEncoder().encodeToString(secretKey.getBytes())
-        );
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
