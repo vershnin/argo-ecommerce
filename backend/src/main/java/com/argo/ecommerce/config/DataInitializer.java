@@ -44,24 +44,14 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (categoryRepository.count() == 0) {
-            seedCategories();
-        }
-
-        if (userRepository.count() == 0) {
-            seedUsers();
-        }
-
-        if (couponRepository.count() == 0) {
-            seedCoupons();
-        }
-
-        if (productRepository.count() == 0) {
-            seedProducts();
-        }
+        seedCategories();
+        seedUsers();
+        seedCoupons();
+        seedProducts();
     }
 
     private void seedCategories() {
+        if (categoryRepository.count() > 0) return;
         categoryRepository.saveAll(List.of(
                 createCategory("Audio", "audio", "Headphones", "Premium audio devices and accessories for immersive listening."),
                 createCategory("Gaming", "gaming", "GameController", "Keyboards, mice, headsets and accessories for every gamer."),
@@ -71,15 +61,24 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedUsers() {
-        if (!userRepository.existsByEmail("admin@argo.com")) {
-            User admin = User.builder()
-                    .fullName("Argo Admin")
-                    .email("admin@argo.com")
-                    .password(passwordEncoder.encode("Admin123!"))
-                    .role(Role.ADMIN)
-                    .build();
-            userRepository.save(admin);
-        }
+        // Always ensure admin@argo.com is an ADMIN
+        userRepository.findByEmail("admin@argo.com").ifPresentOrElse(
+                user -> {
+                    if (user.getRole() != Role.ADMIN) {
+                        user.setRole(Role.ADMIN);
+                        userRepository.save(user);
+                    }
+                },
+                () -> {
+                    User admin = User.builder()
+                            .fullName("Argo Admin")
+                            .email("admin@argo.com")
+                            .password(passwordEncoder.encode("Admin123!"))
+                            .role(Role.ADMIN)
+                            .build();
+                    userRepository.save(admin);
+                }
+        );
 
         if (!userRepository.existsByEmail("customer@argo.com")) {
             User customer = User.builder()
@@ -93,6 +92,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedCoupons() {
+        if (couponRepository.count() > 0) return;
         couponRepository.saveAll(List.of(
                 createCoupon("WELCOME10", Coupon.CouponType.PERCENTAGE, BigDecimal.valueOf(10), BigDecimal.valueOf(50), LocalDate.now().plusMonths(2), 500),
                 createCoupon("SAVE50", Coupon.CouponType.FIXED, BigDecimal.valueOf(50), BigDecimal.valueOf(150), LocalDate.now().plusMonths(3), 250)
@@ -100,6 +100,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedProducts() {
+        if (productRepository.count() > 0) return;
         Category audio = categoryRepository.findBySlug("audio").orElseThrow();
         Category gaming = categoryRepository.findBySlug("gaming").orElseThrow();
         Category computing = categoryRepository.findBySlug("computing").orElseThrow();
