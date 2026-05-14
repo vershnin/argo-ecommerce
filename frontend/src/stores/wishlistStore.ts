@@ -50,7 +50,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     }
   },
 
-  isInWishlist: (productId) => {
+  isInWishlist: (productId: number) => {
     return get().items.some((i) => i.id === productId);
   },
 
