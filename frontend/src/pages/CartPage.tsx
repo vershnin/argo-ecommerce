@@ -45,7 +45,12 @@ export default function CartPage() {
                   </h3>
                   <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center border border-border rounded-lg">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.productId, item.quantity - 1)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                        if (item.quantity <=1) {
+                          removeItem(item.cartItemId);
+                        } else {
+                          updateQuantity(item.productId, item.quantity - 1);
+                        }}}>
                         <Minus className="w-3 h-3" />
                       </Button>
                       <span className="w-8 text-center text-sm">{item.quantity}</span>
