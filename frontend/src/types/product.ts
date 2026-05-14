@@ -51,7 +51,7 @@ export interface Review {
 }
 
 export interface Order {
-  id: string;
+  id: number;
   items: CartItem[];
   subtotal: number;
   deliveryFee: number;
@@ -85,7 +85,7 @@ export interface PromoCode {
 }
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   icon: string;
   description: string;
