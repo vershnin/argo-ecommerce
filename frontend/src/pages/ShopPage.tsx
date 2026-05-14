@@ -30,9 +30,7 @@ export default function ShopPage() {
   const [priceRange, setPriceRange] = useState<[number, number]>([minPrice || 0, maxPrice || 200000]);
 
   const selectedCategoryId =
-    category !== "all" && /^\d+$/.test(category)
-      ? category
-      : categories.find((c) => c.id === category || c.name.toLowerCase() === category.toLowerCase())?.id;
+    category !== "all" ? category : undefined;
 
   const selectedBrandsKey = selectedBrands.join(",");
 
@@ -46,7 +44,7 @@ export default function ShopPage() {
     const matched = categories.find((c) => c.name.toLowerCase() === category.toLowerCase());
     if (matched) {
       const params = new URLSearchParams(searchParams);
-      params.set("category", matched.id);
+      params.set("category", String(matched.id));
       setSearchParams(params, { replace: true });
     }
   }, [categories, category, searchParams, setSearchParams]);
@@ -116,7 +114,7 @@ export default function ShopPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold">
-            {category !== "all" ? categories.find(c => c.id === category || c.name.toLowerCase() === category.toLowerCase())?.name || "Shop" : "All Products"}
+            {category !== "all" ? categories.find(c => String(c.id) === category || c.name.toLowerCase() === category.toLowerCase())?.name || "Shop" : "All Products"}          
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{total} products found</p>
         </div>
@@ -191,9 +189,9 @@ export default function ShopPage() {
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => updateParam("category", cat.id)}
+                  onClick={() => updateParam("category", String(cat.id))}
                   className={`flex items-center justify-between w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                    category === cat.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"
+                    category === String(cat.id) ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"
                   }`}
                 >
                   <span>{cat.name}</span>
@@ -264,7 +262,7 @@ export default function ShopPage() {
             <div className="flex flex-wrap gap-2 mb-4">
               {category !== "all" && (
                 <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => updateParam("category", "all")}>
-                  {categories.find(c => c.id === category)?.name} <X className="w-3 h-3" />
+                  {categories.find(c => String(c.id) === category)?.name} <X className="w-3 h-3" />
                 </Badge>
               )}
               {selectedBrands.map(b => (

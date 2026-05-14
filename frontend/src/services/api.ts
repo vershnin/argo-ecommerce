@@ -64,7 +64,7 @@ export async function fetchProducts(params?: {
   limit?: number;
 }): Promise<{ products: Product[]; total: number }> {
   const categoryValue = params?.category === 'all' ? undefined : params?.category;
-  const categoryId = categoryValue && /^\d+$/.test(categoryValue) ? Number(categoryValue) : undefined;
+  const categoryId = categoryValue !== undefined && /^\d+$/.test(String(categoryValue)) ? Number(categoryValue) : undefined;
 
   const response = await api.get<PageResponse<Product>>('/products', {
     params: {
@@ -114,7 +114,7 @@ export async function fetchCategories(): Promise<Category[]> {
   };
 
   return response.data.map(cat => ({
-    id: cat.id.toString(),
+    id: Number(cat.id),
     name: cat.name,
     icon: iconMap[cat.name] || 'Package',
     description: cat.description || `Browse ${cat.name} products`,
