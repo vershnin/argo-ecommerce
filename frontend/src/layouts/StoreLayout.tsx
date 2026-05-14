@@ -6,6 +6,7 @@ import { StoreFooter } from "@/components/store/StoreFooter";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { useAuthStore } from "@/stores/authStore";
 import { useCartStore } from "@/stores/cartStore";
+import { mergeCart } from "@/services/api";
 
 export default function StoreLayout() {
   const location = useLocation();
@@ -13,9 +14,28 @@ export default function StoreLayout() {
   const fetchCart = useCartStore((s) => s.fetchCart);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchCart();
-    }
+    if (!isAuthenticated) return;
+
+    const guestItems = JSON.parse(localStorage.getItem('guest-cart') || '[]') as Array<{
+      productId: number;
+      quantity: number;
+    }>;
+
+    const syncCart = async () => {
+      try {
+        await fetchCart();
+
+        if (guestItems.length > 0) {
+          await mergeCart(guestItems);
+          localStorage.removeItem('guest-cart');
+          await fetchCart();
+        }
+      } catch (error) {
+        console.error('Failed to merge guest cart after login:', error);
+      }
+    };
+
+    syncCart();
   }, [isAuthenticated, fetchCart]);
 
   return (

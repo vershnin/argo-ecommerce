@@ -8,6 +8,7 @@ interface CartStore {
   totalAmount: number;
   itemCount: number;
   fetchCart: () => Promise<void>;
+  addGuestItem: (product: Product, quantity?: number) => void;
   addItem: (product: Product, quantity?: number) => Promise<void>;
   removeItem: (cartItemId: number) => Promise<void>;
   updateQuantity: (productId: number, quantity: number) => Promise<void>;
@@ -32,14 +33,22 @@ export const useCartStore = create<CartStore>()((set) => ({
     }
   },
 
+  addGuestItem: (product: Product, quantity = 1) => {
+    const guest = JSON.parse(localStorage.getItem('guest-cart') || '[]');
+    const existing = guest.find((i: any) => i.productId === product.id);
+    if (existing) existing.quantity += quantity;
+    else guest.push({ productId: product.id, quantity });
+    localStorage.setItem('guest-cart', JSON.stringify(guest));
+  },
+
   addItem: async (product, quantity = 1) => {
     try {
       const { isAuthenticated } = useAuthStore.getState();
       if (!isAuthenticated) {
+        useCartStore.getState().addGuestItem(product, quantity);
         window.location.href = '/login';
         return;
       }
-// product.id is now number, matching backend type
       const cart = await cartApi.addItem(product.id, quantity);
       set({
         items: cart.items,
