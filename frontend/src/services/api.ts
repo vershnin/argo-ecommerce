@@ -160,12 +160,9 @@ export async function createOrder(orderData: {
   deliveryMethod: string;
   shippingAddress: Address;
   promoCode?: string;
-}): Promise<{ orderId: string; status: string }> {
-  const response = await api.post<{ orderNumber: string; status: string }>('/orders', orderData);
-  return {
-    orderId: response.data.orderNumber,
-    status: response.data.status,
-  };
+}): Promise<{ orderId: number; orderNumber: string; status: string }> {
+  const response = await api.post<{ orderId: number; orderNumber: string; status: string }>('/orders', orderData);
+  return response.data;
 }
 
 // ─── Auth ────────────────────────────────────────────────────
