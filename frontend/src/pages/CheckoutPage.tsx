@@ -78,42 +78,27 @@ export default function CheckoutPage() {
       });
 
       const orderItems = items.map((item) => ({
-        product: {
-          id: item.productId,
-          name: item.name,
-          slug: item.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-          category: { id: 'unknown', name: 'Uncategorized', slug: 'uncategorized' },
-          brand: '',
-          price: item.price,
-          effectivePrice: item.price,
-          description: item.name,
-          shortDescription: item.name,
-          imageUrl: item.imageUrl,
-          additionalImages: [],
-          specifications: {},
-          features: [],
-          sku: String(item.productId),
-          stockQuantity: item.stockQuantity,
-          inStock: item.stockQuantity > 0,
-          rating: 0,
-          reviewCount: 0,
-          createdAt: new Date().toISOString(),
-        },
+        productId: item.productId,
+        name: item.name,
+        imageUrl: item.imageUrl,
+        unitPrice: item.price,
         quantity: item.quantity,
+        subtotal: item.price * item.quantity,
       })) as Order['items'];
 
       const order: Order = {
-        id: result.orderId,
+        orderId: result.orderId,
+        orderNumber: result.orderNumber,
+        createdAt: new Date().toISOString(),
+        status: result.status.toUpperCase(),
         items: orderItems,
         subtotal,
         deliveryFee,
         discount,
-        total,
-        status: 'confirmed',
-        deliveryMethod: deliveryMethod as Order['deliveryMethod'],
-        shippingAddress: form,
+        totalAmount: total,
+        deliveryMethod,
         promoCode: promoApplied ? promoCode : undefined,
-        createdAt: new Date().toISOString(),
+        shippingAddress: form,
       };
 
       addAdminOrder(order);
@@ -125,7 +110,7 @@ export default function CheckoutPage() {
       navigate('/order-success', { 
         state: { 
           orderId: result.orderId,
-          orderNumber: result.orderId 
+          orderNumber: result.orderNumber 
         } 
       });
     } catch {
