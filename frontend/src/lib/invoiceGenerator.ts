@@ -6,10 +6,10 @@ export function generateInvoiceHTML(order: Order): string {
     .map(
       (item) => `
       <tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${item.product.name}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${item.name}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${item.quantity}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${formatPrice(item.product.discountPrice || item.product.price)}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${formatPrice((item.product.discountPrice || item.product.price) * item.quantity)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${formatPrice(item.unitPrice)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${formatPrice(item.subtotal)}</td>
       </tr>`
     )
     .join("");
@@ -22,7 +22,7 @@ export function generateInvoiceHTML(order: Order): string {
   return `
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Invoice ${order.id}</title></head>
+<head><meta charset="utf-8"><title>Invoice ${order.orderId}</title></head>
 <body style="font-family:system-ui,-apple-system,sans-serif;max-width:700px;margin:0 auto;padding:20px;color:#1a1a1a;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;">
     <div>
@@ -31,7 +31,7 @@ export function generateInvoiceHTML(order: Order): string {
     </div>
     <div style="text-align:right;">
       <h2 style="font-size:20px;margin:0 0 4px;">INVOICE</h2>
-      <p style="font-size:13px;color:#666;margin:2px 0;">Order: <strong>${order.id}</strong></p>
+      <p style="font-size:13px;color:#666;margin:2px 0;">Order: <strong>${order.orderId}</strong></p>
       <p style="font-size:13px;color:#666;margin:2px 0;">Date: ${new Date(order.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
     </div>
   </div>
@@ -43,7 +43,7 @@ export function generateInvoiceHTML(order: Order): string {
     </div>
     <div style="flex:1;">
       <h3 style="font-size:12px;text-transform:uppercase;color:#666;margin:0 0 6px;">Delivery</h3>
-      <p style="font-size:13px;margin:4px 0;text-transform:capitalize;">${order.deliveryMethod} Delivery</p>
+      <p style="font-size:13px;margin:4px 0;text-transform:capitalize;">${order.deliveryMethod ? `${order.deliveryMethod} Delivery` : "Delivery"}</p>
     </div>
   </div>
 
@@ -61,7 +61,7 @@ export function generateInvoiceHTML(order: Order): string {
 
   <div style="max-width:280px;margin-left:auto;">
     <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;">
-      <span style="color:#666;">Subtotal</span><span>${formatPrice(order.subtotal)}</span>
+      <span style="color:#666;">Subtotal</span><span>${formatPrice(order.subtotal ?? order.items.reduce((sum, item) => sum + item.subtotal, 0))}</span>
     </div>
     ${order.discount > 0 ? `<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;color:#16a34a;">
       <span>Discount${order.promoCode ? ` (${order.promoCode})` : ""}</span><span>-${formatPrice(order.discount)}</span>
@@ -70,7 +70,7 @@ export function generateInvoiceHTML(order: Order): string {
       <span style="color:#666;">Delivery</span><span>${order.deliveryFee === 0 ? "FREE" : formatPrice(order.deliveryFee)}</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:18px;font-weight:bold;border-top:2px solid #1a1a1a;margin-top:6px;">
-      <span>Total</span><span>${formatPrice(order.total)}</span>
+      <span>Total</span><span>${formatPrice(order.totalAmount)}</span>
     </div>
   </div>
 
