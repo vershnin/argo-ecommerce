@@ -22,6 +22,9 @@ export interface Order {
   status: string;
   items: OrderItem[];
   totalAmount: number;
+  subtotal?: number;
+  deliveryFee?: number;
+  discount?: number;
   shippingAddress?: ShippingAddress;
 }
 

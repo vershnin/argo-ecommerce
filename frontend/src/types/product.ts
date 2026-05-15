@@ -1,3 +1,5 @@
+export type { Order } from "@/api/orders";
+
 export interface Product {
   id: number;
   name: string;
@@ -50,19 +52,6 @@ export interface Review {
   createdAt: string;
 }
 
-export interface Order {
-  id: number;
-  items: CartItem[];
-  subtotal: number;
-  deliveryFee: number;
-  discount: number;
-  total: number;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  deliveryMethod: 'standard' | 'express' | 'pickup';
-  shippingAddress?: Address;
-  promoCode?: string;
-  createdAt: string;
-}
 
 export interface Address {
   fullName: string;
