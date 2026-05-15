@@ -1,8 +1,12 @@
 import { apiClient } from './client';
 
 export interface OrderItem {
+  productId: number;
   name: string;
   imageUrl: string;
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
 }
 
 export interface ShippingAddress {
@@ -25,6 +29,8 @@ export interface Order {
   subtotal?: number;
   deliveryFee?: number;
   discount?: number;
+  deliveryMethod?: string;
+  promoCode?: string;
   shippingAddress?: ShippingAddress;
 }
 
