@@ -19,7 +19,7 @@ interface AdminStore {
 
   // Orders
   addOrder: (order: Order) => void;
-  updateOrderStatus: (id: string, status: Order['status']) => void;
+  updateOrderStatus: (id: number, status: Order['status']) => void;
 
   // Promo codes
   addPromoCode: (promo: PromoCode) => void;
@@ -106,7 +106,7 @@ export const useAdminStore = create<AdminStore>()(
 
       updateOrderStatus: (id, status) =>
         set((s) => ({
-          orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
+          orders: s.orders.map((o) => (o.orderId === id ? { ...o, status } : o)),
         })),
 
       addPromoCode: (promo) =>
