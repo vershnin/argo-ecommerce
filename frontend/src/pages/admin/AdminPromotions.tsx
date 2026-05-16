@@ -11,13 +11,13 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useAdminStore } from "@/stores/adminStore";
+import { usePromoStore } from "@/stores/promoStore";
 import { formatPrice } from "@/lib/formatters";
 import { useToast } from "@/hooks/use-toast";
 import { PromoCode } from "@/types/product";
 
 export default function AdminPromotions() {
-  const { promoCodes, addPromoCode, updatePromoCode, deletePromoCode } = useAdminStore();
+  const { promoCodes, addPromoCode, updatePromoCode, deletePromoCode } = usePromoStore();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
