@@ -1,13 +1,13 @@
 import { Package, ClipboardList, Tag, TrendingUp, AlertTriangle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAdminStore } from "@/stores/adminStore";
+import { usePromoStore } from "@/stores/promoStore";
 import { formatPrice } from "@/lib/formatters";
 import { fetchAllOrders } from "@/api/orders";
 import { fetchProducts } from "@/services/api";
 
 export default function AdminDashboard() {
-  const { promoCodes } = useAdminStore();
+  const { promoCodes } = usePromoStore();
 
   const { data: ordersData, isLoading: ordersLoading } = useQuery({
     queryKey: ["admin-orders", 0],
