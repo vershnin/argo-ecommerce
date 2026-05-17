@@ -33,6 +33,7 @@ public class ProductController {
     public ResponseEntity<PageResponse<ProductResponse>> getProducts(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String brand,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Boolean inStock,
@@ -40,7 +41,7 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
         return ResponseEntity.ok(productService.getProducts(
-                keyword, categoryId, minPrice, maxPrice, inStock, sort, page, size));
+                keyword, categoryId, brand, minPrice, maxPrice, inStock, sort, page, size));
     }
 
     /**

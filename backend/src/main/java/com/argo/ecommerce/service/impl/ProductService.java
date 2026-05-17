@@ -34,14 +34,14 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> getProducts(
-            String keyword, Long categoryId,
+            String keyword, Long categoryId, String brand,
             BigDecimal minPrice, BigDecimal maxPrice,
             Boolean inStock, String sort,
             int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, resolveSort(sort));
         Page<Product> result = productRepository.searchProducts(
-                keyword, categoryId, minPrice, maxPrice, inStock, pageable);
+                keyword, categoryId, brand, minPrice, maxPrice, inStock, pageable);
 
         return toPageResponse(result);
     }

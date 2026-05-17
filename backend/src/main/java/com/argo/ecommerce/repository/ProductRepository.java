@@ -20,10 +20,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("""
         SELECT p FROM Product p
-        WHERE (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                                OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                                OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        WHERE (:keyword IS NULL OR LOWER(CAST(p.name AS string)) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))
+                                OR LOWER(CAST(p.brand AS string)) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))
+                                OR LOWER(CAST(p.description AS string)) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))
           AND (:categoryId IS NULL OR p.category.id = :categoryId)
+          AND (:brand IS NULL OR LOWER(CAST(p.brand AS string)) = LOWER(CAST(:brand AS string)))
           AND (:minPrice IS NULL OR p.price >= :minPrice)
           AND (:maxPrice IS NULL OR p.price <= :maxPrice)
           AND (:inStock IS NULL OR (:inStock = true AND p.stockQuantity > 0))
@@ -31,6 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> searchProducts(
             @Param("keyword") String keyword,
             @Param("categoryId") Long categoryId,
+            @Param("brand") String brand,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("inStock") Boolean inStock,
