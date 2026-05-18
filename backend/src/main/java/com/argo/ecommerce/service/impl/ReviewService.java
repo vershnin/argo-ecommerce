@@ -10,6 +10,7 @@ import com.argo.ecommerce.exception.BadRequestException;
 import com.argo.ecommerce.exception.ResourceNotFoundException;
 import com.argo.ecommerce.repository.ProductRepository;
 import com.argo.ecommerce.repository.ReviewRepository;
+import com.argo.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> getProductReviews(Long productId, int page, int size) {
@@ -48,9 +50,12 @@ public class ReviewService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
         Review review = Review.builder()
                 .product(product)
-                .user(User.builder().id(userId).build())
+                .user(user)
                 .rating(request.getRating())
                 .title(request.getTitle())
                 .comment(request.getComment())
