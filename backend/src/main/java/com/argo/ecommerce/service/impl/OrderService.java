@@ -14,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.argo.ecommerce.service.impl.EmailNotificationService;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,8 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
+    private final UserRepository userRepository;
+    private final EmailNotificationService emailNotificationService;
 
     // ── Create order from cart ─────────────────────────────────
 
@@ -104,7 +108,7 @@ public class OrderService {
         // Create the order
         Order order = Order.builder()
                 .orderNumber(generateOrderNumber())
-                .user(User.builder().id(userId).build()) // proxy — userId is enough for FK
+                .user(userRepository.getReferenceById(userId)) // session-bound proxy
                 .status(OrderStatus.PENDING)
                 .subtotal(subtotal)
                 .deliveryFee(deliveryFee)
@@ -133,6 +137,7 @@ public class OrderService {
         cart.getItems().clear();
         cartRepository.save(cart);
 
+        emailNotificationService.sendOrderCreatedNotification(saved);
         return toResponse(saved);
     }
 
@@ -170,12 +175,16 @@ public class OrderService {
     public OrderResponse updateOrderStatus(Long orderId, String status) {
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+        OrderStatus previousStatus = order.getStatus();
         try {
             order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Invalid order status: " + status);
         }
-        return toResponse(orderRepository.save(order));
+
+        Order savedOrder = orderRepository.save(order);
+        emailNotificationService.sendOrderStatusChangedNotification(savedOrder, previousStatus);
+        return toResponse(savedOrder);
     }
 
     // ── Helpers ────────────────────────────────────────────────
