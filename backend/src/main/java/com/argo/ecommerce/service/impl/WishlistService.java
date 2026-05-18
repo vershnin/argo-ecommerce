@@ -7,6 +7,7 @@ import com.argo.ecommerce.entity.Wishlist;
 import com.argo.ecommerce.exception.ResourceNotFoundException;
 import com.argo.ecommerce.repository.ProductRepository;
 import com.argo.ecommerce.repository.WishlistRepository;
+import com.argo.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ public class WishlistService {
 
     private final WishlistRepository wishlistRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
     private final ProductMapper mapper;
 
     @Transactional(readOnly = true)
@@ -36,7 +38,7 @@ public class WishlistService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
 
         Wishlist entry = Wishlist.builder()
-                .user(User.builder().id(userId).build())
+                .user(userRepository.getReferenceById(userId))
                 .product(product)
                 .build();
         wishlistRepository.save(entry);
