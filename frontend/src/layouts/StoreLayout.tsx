@@ -36,7 +36,7 @@ export default function StoreLayout() {
     };
 
     syncCart();
-  }, [isAuthenticated, fetchCart]);
+  }, [isAuthenticated]); 
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
