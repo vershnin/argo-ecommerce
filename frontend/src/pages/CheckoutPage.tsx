@@ -80,6 +80,7 @@ export default function CheckoutPage() {
       const orderItems = items.map((item) => ({
         productId: item.productId,
         name: item.name,
+        slug: item.slug,
         imageUrl: item.imageUrl,
         unitPrice: item.price,
         quantity: item.quantity,

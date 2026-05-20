@@ -3,6 +3,7 @@ import { apiClient } from './client';
 export interface OrderItem {
   productId: number;
   name: string;
+  slug?: string;
   imageUrl: string;
   unitPrice: number;
   quantity: number;

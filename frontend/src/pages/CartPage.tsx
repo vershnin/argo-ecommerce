@@ -71,7 +71,7 @@ export default function CartPage() {
                             const product: Product = {
                               id: item.productId,
                               name: item.name,
-                              slug: item.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+                              slug: item.slug,
                               category: { id: 'unknown', name: 'Uncategorized', slug: 'uncategorized' },
                               brand: '',
                               price: item.price,
