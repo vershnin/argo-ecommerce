@@ -3,6 +3,7 @@ package com.argo.ecommerce.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -106,5 +107,17 @@ public class JwtService {
             log.warn("JWT invalid: {}", e.getMessage());
         }
         return false;
+    }
+
+    @PostConstruct
+    public void validateSecret() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException("APP_JWT_SECRET environment variable must be set");
+        }
+
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 256 bits (32 bytes)");
+        }
     }
 }
