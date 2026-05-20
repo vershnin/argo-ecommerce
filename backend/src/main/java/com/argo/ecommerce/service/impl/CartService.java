@@ -176,6 +176,7 @@ public class CartService {
                         .cartItemId(item.getId())
                         .productId(item.getProduct().getId())
                         .name(item.getProduct().getName())
+                        .slug(item.getProduct().getSlug())
                         .price(item.getProduct().getEffectivePrice())
                         .quantity(item.getQuantity())
                         .imageUrl(item.getProduct().getImageUrl())

@@ -24,7 +24,7 @@ public class CartResponse {
 
     public static class CartItemDto {
         private Long cartItemId, productId;
-        private String name, imageUrl;
+        private String name, imageUrl, slug;
         private BigDecimal price, subtotal;
         private Integer quantity, stockQuantity;
 
@@ -32,6 +32,7 @@ public class CartResponse {
         public Long getCartItemId() { return cartItemId; }
         public Long getProductId() { return productId; }
         public String getName() { return name; }
+        public String getSlug() { return slug; }
         public BigDecimal getPrice() { return price; }
         public Integer getQuantity() { return quantity; }
         public String getImageUrl() { return imageUrl; }
@@ -44,6 +45,7 @@ public class CartResponse {
             public Builder cartItemId(Long v) { d.cartItemId = v; return this; }
             public Builder productId(Long v) { d.productId = v; return this; }
             public Builder name(String v) { d.name = v; return this; }
+            public Builder slug(String v) { d.slug = v; return this; }
             public Builder price(BigDecimal v) { d.price = v; return this; }
             public Builder quantity(Integer v) { d.quantity = v; return this; }
             public Builder imageUrl(String v) { d.imageUrl = v; return this; }
@@ -52,4 +54,4 @@ public class CartResponse {
             public CartItemDto build() { return d; }
         }
     }
-}
+
