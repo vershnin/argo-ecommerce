@@ -54,8 +54,7 @@ public class FileUploadController {
             }
 
             // Generate unique filename
-            String originalFilename = file.getOriginalFilename();
-            String extension = getFileExtension(originalFilename);
+            String extension = getExtensionFromContentType(contentType);
             String filename = UUID.randomUUID().toString() + "." + extension;
             Path filePath = uploadPath.resolve(filename);
 
@@ -83,9 +82,12 @@ public class FileUploadController {
         return false;
     }
 
-    private String getFileExtension(String filename) {
-        if (filename == null) return "jpg";
-        int lastDot = filename.lastIndexOf('.');
-        return lastDot > 0 ? filename.substring(lastDot + 1).toLowerCase() : "jpg";
+    private String getExtensionFromContentType(String contentType) {
+        return switch (contentType) {
+            case "image/jpeg" -> "jpg";
+            case "image/png" -> "png";
+            case "image/webp" -> "webp";
+            default -> throw new com.argo.ecommerce.exception.BadRequestException("Unsupported image type");
+        };
     }
 }
