@@ -24,6 +24,7 @@ const STATUS_COLOURS: Record<string, string> = {
 
 export default function AdminOrders() {
   const [page, setPage] = useState(0);
+  const [pendingStatus, setPendingStatus] = useState<Record<number, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -35,11 +36,19 @@ export default function AdminOrders() {
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       updateOrderStatus(id, status),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      setPendingStatus((prev) => {
+        const { [variables.id]: _, ...rest } = prev;
+        return rest;
+      });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       toast({ title: "Order status updated" });
     },
-    onError: () => {
+    onError: (_error, variables) => {
+      setPendingStatus((prev) => {
+        const { [variables.id]: _, ...rest } = prev;
+        return rest;
+      });
       toast({ title: "Failed to update status", variant: "destructive" });
     },
   });
@@ -89,13 +98,17 @@ export default function AdminOrders() {
                       </td>
                       <td className="p-4">
                         <Select
-                          value={order.status}
-                          onValueChange={(status) =>
-                            statusMutation.mutate({ id: order.orderId, status })
-                          }
+                          value={pendingStatus[order.orderId] ?? order.status}
+                          onValueChange={(status) => {
+                            setPendingStatus((prev) => ({
+                              ...prev,
+                              [order.orderId]: status,
+                            }));
+                            statusMutation.mutate({ id: order.orderId, status });
+                          }}
                           disabled={statusMutation.isPending}
                         >
-                          <SelectTrigger className={`w-36 text-xs font-semibold border-0 ${STATUS_COLOURS[order.status]}`}>
+                          <SelectTrigger className={`w-36 text-xs font-semibold border-0 ${STATUS_COLOURS[pendingStatus[order.orderId] ?? order.status]}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
