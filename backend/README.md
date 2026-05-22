@@ -12,7 +12,14 @@ This is the backend for Argo Electronics, a full-stack ecommerce shop built with
 1. Install Java 25, Maven, PostgreSQL
 2. Create DB: `createdb argo_ecommerce`
 3. Copy `backend/.env.example` to `backend/.env` and update values, or set equivalent environment variables.
-4. Run: `mvn spring-boot:run`
+4. (Optional) Add email configuration to enable order notifications:
+   - `APP_NOTIFICATIONS_ENABLED=true`
+   - `SPRING_MAIL_HOST=smtp.example.com`
+   - `SPRING_MAIL_PORT=587`
+   - `SPRING_MAIL_USERNAME=your-smtp-user`
+   - `SPRING_MAIL_PASSWORD=your-smtp-password`
+   - `APP_NOTIFICATIONS_FROM=no-reply@argo.com`
+5. Run: `mvn spring-boot:run`
 
 Server starts at http://localhost:8080. Check APIs like `/api/products`.
 
