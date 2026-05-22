@@ -61,24 +61,15 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedUsers() {
-        // Always ensure admin@argo.com is an ADMIN
-        userRepository.findByEmail("admin@argo.com").ifPresentOrElse(
-                user -> {
-                    if (user.getRole() != Role.ADMIN) {
-                        user.setRole(Role.ADMIN);
-                        userRepository.save(user);
-                    }
-                },
-                () -> {
-                    User admin = User.builder()
-                            .fullName("Argo Admin")
-                            .email("admin@argo.com")
-                            .password(passwordEncoder.encode("Admin123!"))
-                            .role(Role.ADMIN)
-                            .build();
-                    userRepository.save(admin);
-                }
-        );
+        if (!userRepository.existsByEmail("admin@argo.com")) {
+            User admin = User.builder()
+                    .fullName("Argo Admin")
+                    .email("admin@argo.com")
+                    .password(passwordEncoder.encode("Admin123!"))
+                    .role(Role.ADMIN)
+                    .build();
+            userRepository.save(admin);
+        }
 
         if (!userRepository.existsByEmail("customer@argo.com")) {
             User customer = User.builder()
