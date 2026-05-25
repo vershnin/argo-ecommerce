@@ -45,22 +45,20 @@ public class OrderService {
             throw new BadRequestException("Cannot create order from empty cart");
         }
 
-        // Validate stock and build order items
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
 
         for (CartItem cartItem : cart.getItems()) {
-            Product product = cartItem.getProduct();
-
-            // Re-fetch with lock to prevent race conditions
-            Product lockedProduct = productRepository.findById(product.getId())
+            Product lockedProduct = productRepository.findByIdForUpdate(cartItem.getProduct().getId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Product not found: " + product.getId()));
+                            "Product not found: " + cartItem.getProduct().getId()));
 
-            if (lockedProduct.getStockQuantity() < cartItem.getQuantity()) {
+            int remainingStock = lockedProduct.getStockQuantity() - cartItem.getQuantity();
+            if (remainingStock < 0) {
                 throw new BadRequestException("Insufficient stock for: " + lockedProduct.getName()
                         + " (available: " + lockedProduct.getStockQuantity() + ")");
             }
+            lockedProduct.setStockQuantity(remainingStock);
 
             BigDecimal unitPrice = lockedProduct.getEffectivePrice();
             BigDecimal itemSubtotal = unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
@@ -76,21 +74,14 @@ public class OrderService {
 
             orderItems.add(orderItem);
             subtotal = subtotal.add(itemSubtotal);
-
-            // ── Deduct inventory ──────────────────────────────
-            lockedProduct.setStockQuantity(
-                    lockedProduct.getStockQuantity() - cartItem.getQuantity());
-            productRepository.save(lockedProduct);
         }
 
-        // Calculate delivery fee
         BigDecimal deliveryFee = calculateDeliveryFee(request.getDeliveryMethod(), subtotal);
 
-        // Apply coupon discount
         BigDecimal discount = BigDecimal.ZERO;
         String appliedCoupon = null;
         if (request.getPromoCode() != null && !request.getPromoCode().isBlank()) {
-            Coupon coupon = couponRepository.findByCodeIgnoreCase(request.getPromoCode())
+            Coupon coupon = couponRepository.findByCodeIgnoreCaseForUpdate(request.getPromoCode())
                     .orElseThrow(() -> new BadRequestException("Invalid promo code"));
             if (!coupon.isValid(subtotal)) {
                 throw new BadRequestException("Promo code is not valid for this order");
@@ -103,13 +94,11 @@ public class OrderService {
 
         BigDecimal totalAmount = subtotal.add(deliveryFee).subtract(discount);
 
-        // Build shipping address snapshot
         OrderRequest.ShippingAddress addr = request.getShippingAddress();
 
-        // Create the order
         Order order = Order.builder()
                 .orderNumber(generateOrderNumber())
-                .user(userRepository.getReferenceById(userId)) // session-bound proxy
+                .user(userRepository.getReferenceById(userId))
                 .status(OrderStatus.PENDING)
                 .subtotal(subtotal)
                 .deliveryFee(deliveryFee)
@@ -127,14 +116,10 @@ public class OrderService {
                 .paymentStatus("PENDING")
                 .build();
 
+        order.setItems(orderItems);
+        orderItems.forEach(item -> item.setOrder(order));
         Order saved = orderRepository.save(order);
 
-        // Link items to order
-        orderItems.forEach(item -> item.setOrder(saved));
-        saved.setItems(orderItems);
-        orderRepository.save(saved);
-
-        // Clear the cart after successful order
         cart.getItems().clear();
         cartRepository.save(cart);
 
@@ -177,15 +162,34 @@ public class OrderService {
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
         OrderStatus previousStatus = order.getStatus();
+        OrderStatus newStatus;
         try {
-            order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+            newStatus = OrderStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Invalid order status: " + status);
         }
 
+        if (previousStatus == newStatus) {
+            return toResponse(order);
+        }
+
+        if (newStatus == OrderStatus.CANCELLED && previousStatus != OrderStatus.CANCELLED) {
+            restoreStockForCancelledOrder(order);
+        }
+
+        order.setStatus(newStatus);
         Order savedOrder = orderRepository.save(order);
         emailNotificationServiceProvider.ifAvailable(svc -> svc.sendOrderStatusChangedNotification(savedOrder, previousStatus));
         return toResponse(savedOrder);
+    }
+
+    private void restoreStockForCancelledOrder(Order order) {
+        for (OrderItem item : order.getItems()) {
+            if (item.getProduct() == null) continue;
+            productRepository.findByIdForUpdate(item.getProduct().getId())
+                    .ifPresent(lockedProduct -> lockedProduct.setStockQuantity(
+                            lockedProduct.getStockQuantity() + item.getQuantity()));
+        }
     }
 
     // ── Helpers ────────────────────────────────────────────────
