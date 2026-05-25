@@ -13,6 +13,8 @@ import com.argo.ecommerce.repository.CartRepository;
 import com.argo.ecommerce.repository.ProductRepository;
 import com.argo.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CartService {
+
+    private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -105,11 +109,12 @@ public class CartService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
         CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + cartItemId));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
-        // Security: ensure the item actually belongs to this user's cart
-        if (!item.getCart().getId().equals(cart.getId())) {
-            throw new BadRequestException("Cart item does not belong to current user");
+        // SECURITY: Validate ownership BEFORE deletion to prevent IDOR attacks
+        if (!cart.getId().equals(item.getCart().getId())) {
+            log.warn("Unauthorized cart item access attempt: userId={}, cartItemId={}", userId, cartItemId);
+            throw new BadRequestException("Access denied: item does not belong to your cart");
         }
 
         cart.getItems().remove(item);
@@ -161,7 +166,7 @@ public class CartService {
         return toResponse(refreshed);
     }
 
-    // ── Helpers ────────────────────────────────────────────────
+    // ── Helpers ──
 
     private Cart createEmptyCart(Long userId) {
         User user = userRepository.findById(userId)
