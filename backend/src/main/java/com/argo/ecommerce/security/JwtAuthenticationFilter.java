@@ -51,9 +51,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             final String email = jwtService.extractEmail(token);
+            if (email == null || email.isBlank()) {
+                log.warn("JWT token missing required claims (email) for request: {}", request.getRequestURI());
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             // Only set authentication if not already set
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
                 if (jwtService.isTokenValid(token, userDetails)) {
@@ -68,7 +73,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            log.error("Cannot set user authentication: {}", e.getMessage());
+            log.error("JWT authentication error for request {}: {}", request.getRequestURI(), e.getMessage());
+            // Clear any partial authentication on error
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
