@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
 
-    @Query("SELECT w FROM Wishlist w JOIN FETCH w.product WHERE w.user.id = :userId")
+    @Query("SELECT w FROM Wishlist w JOIN FETCH w.product p JOIN FETCH p.category WHERE w.user.id = :userId")
     List<Wishlist> findByUserIdWithProduct(@Param("userId") Long userId);
 
     Optional<Wishlist> findByUserIdAndProductId(Long userId, Long productId);

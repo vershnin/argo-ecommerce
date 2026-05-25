@@ -10,7 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "products")
+@Table(name = "products", indexes = {
+        @Index(name = "idx_products_brand", columnList = "brand"),
+        @Index(name = "idx_products_category_price", columnList = "category_id, price")
+})
 public class Product {
 
     @Id

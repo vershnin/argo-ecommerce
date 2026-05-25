@@ -5,7 +5,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "wishlists", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "product_id"}))
+@Table(name = "wishlists",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "product_id"}),
+       indexes = {
+           @Index(name = "idx_wishlists_user_id", columnList = "user_id"),
+           @Index(name = "idx_wishlists_product_id", columnList = "product_id")
+       }
+)
 public class Wishlist {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

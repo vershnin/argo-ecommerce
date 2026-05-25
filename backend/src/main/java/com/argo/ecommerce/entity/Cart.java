@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "carts")
+@Table(name = "carts", indexes = {
+        @Index(name = "idx_carts_user_id", columnList = "user_id")
+})
 public class Cart {
 
     @Id
