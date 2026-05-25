@@ -115,9 +115,18 @@ public class JwtService {
             throw new IllegalStateException("APP_JWT_SECRET environment variable must be set");
         }
 
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        if (keyBytes.length < 32) {
-            throw new IllegalStateException("JWT secret must be at least 256 bits (32 bytes)");
+        if (secretKey.startsWith("dev-secret")) {
+            log.warn("⚠️  DEVELOPMENT MODE: Using insecure JWT secret. Set APP_JWT_SECRET in production!");
+            return;
+        }
+
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+            if (keyBytes.length < 32) {
+                throw new IllegalStateException("JWT secret must be at least 256 bits (32 bytes when Base64-decoded)");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("JWT secret must be a valid Base64-encoded string", e);
         }
     }
 }
