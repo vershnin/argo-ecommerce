@@ -26,4 +26,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     List<Order> findByUserId(Long userId);
+
+    // SECURITY: Verify user has completed a purchase of a product before allowing review
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END " +
+            "FROM Order o JOIN o.items oi " +
+            "WHERE o.user.id = :userId " +
+            "AND oi.product.id = :productId " +
+            "AND o.status IN ('COMPLETED', 'DELIVERED')")
+    boolean hasUserPurchasedProduct(@Param("userId") Long userId, @Param("productId") Long productId);
 }

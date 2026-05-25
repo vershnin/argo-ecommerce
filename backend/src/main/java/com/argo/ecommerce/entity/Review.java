@@ -46,6 +46,7 @@ public class Review {
         public Builder rating(Integer v) { r.rating = v; return this; }
         public Builder title(String v) { r.title = v; return this; }
         public Builder comment(String v) { r.comment = v; return this; }
+        public Builder verified(Boolean v) { r.verified = v; return this; }
         public Builder helpful(Integer v) { r.helpful = v; return this; }
         public Review build() { return r; }
     }
