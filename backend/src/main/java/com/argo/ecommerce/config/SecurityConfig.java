@@ -5,6 +5,7 @@ import com.argo.ecommerce.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -35,15 +36,18 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
+    private final Environment environment;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
     // Explicit constructor — replaces @RequiredArgsConstructor
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
-                          UserDetailsServiceImpl userDetailsService) {
+                          UserDetailsServiceImpl userDetailsService,
+                          Environment environment) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
+        this.environment = environment;
     }
 
     @Bean
@@ -69,9 +73,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim).toList();
-        config.setAllowedOrigins(origins);
+        
+        // SECURITY: Profile-based CORS configuration
+        boolean isProduction = Arrays.asList(environment.getActiveProfiles()).contains("prod");
+        
+        if (isProduction) {
+            // PRODUCTION: Strict CORS - only allow configured origins
+            List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(origin -> !origin.contains("localhost") && !origin.contains("127.0.0.1"))
+                    .toList();
+            config.setAllowedOrigins(origins);
+        } else {
+            // DEVELOPMENT: Permissive CORS - allow localhost
+            List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                    .map(String::trim).toList();
+            config.setAllowedOrigins(origins);
+        }
+        
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
         config.setExposedHeaders(List.of("Authorization"));
