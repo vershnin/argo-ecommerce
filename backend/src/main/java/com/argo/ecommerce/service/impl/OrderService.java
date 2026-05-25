@@ -8,6 +8,7 @@ import com.argo.ecommerce.exception.BadRequestException;
 import com.argo.ecommerce.exception.ResourceNotFoundException;
 import com.argo.ecommerce.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -31,7 +32,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
     private final UserRepository userRepository;
-    private final EmailNotificationService emailNotificationService;
+    private final ObjectProvider<EmailNotificationService> emailNotificationServiceProvider;
 
     // ── Create order from cart ─────────────────────────────────
 
@@ -137,7 +138,7 @@ public class OrderService {
         cart.getItems().clear();
         cartRepository.save(cart);
 
-        emailNotificationService.sendOrderCreatedNotification(saved);
+        emailNotificationServiceProvider.ifAvailable(svc -> svc.sendOrderCreatedNotification(saved));
         return toResponse(saved);
     }
 
@@ -183,7 +184,7 @@ public class OrderService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        emailNotificationService.sendOrderStatusChangedNotification(savedOrder, previousStatus);
+        emailNotificationServiceProvider.ifAvailable(svc -> svc.sendOrderStatusChangedNotification(savedOrder, previousStatus));
         return toResponse(savedOrder);
     }
 
