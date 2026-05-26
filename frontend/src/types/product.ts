@@ -5,7 +5,7 @@ export interface Product {
   name: string;
   slug: string;
   category: {
-    id: string;
+    id: number;
     name: string;
     slug: string;
   };

@@ -242,7 +242,7 @@ export default function ProductDetailPage() {
         <TabsContent value="description" className="pt-6">
           <div className="prose prose-sm max-w-none">
             <p className="text-muted-foreground leading-relaxed mb-4">{product.description}</p>
-            {product.features.length > 0 && (
+            {product.features?.length > 0 && (
               <>
                 <h3 className="font-semibold text-base mb-3">Key Features</h3>
                 <ul className="space-y-2">
@@ -259,12 +259,16 @@ export default function ProductDetailPage() {
 
         <TabsContent value="specs" className="pt-6">
           <div className="max-w-lg">
-            {Object.entries(product.specifications).map(([key, val]) => (
-              <div key={key} className="flex justify-between py-3 border-b border-border text-sm">
-                <span className="text-muted-foreground">{key}</span>
-                <span className="font-medium">{val}</span>
-              </div>
-            ))}
+            {Object.entries(product.specifications || {}).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No specifications available.</p>
+            ) : (
+              Object.entries(product.specifications).map(([key, val]) => (
+                <div key={key} className="flex justify-between py-3 border-b border-border text-sm">
+                  <span className="text-muted-foreground">{key}</span>
+                  <span className="font-medium">{val}</span>
+                </div>
+              ))
+            )}
           </div>
         </TabsContent>
 

@@ -24,8 +24,8 @@ export interface ProductDto {
   rating: number;
   reviewCount: number;
   warranty?: string;
-  specifications?: string;
-  features?: string;
+  specifications: Record<string, string>;
+  features: string[];
   category: { id: number; name: string; slug: string };
   createdAt: string;
 }
