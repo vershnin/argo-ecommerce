@@ -7,18 +7,23 @@ interface CartStore {
   items: CartItemDto[];
   totalAmount: number;
   itemCount: number;
+  isPending: boolean;
+  pendingProductId: number | null;
   fetchCart: () => Promise<void>;
   addGuestItem: (product: Product, quantity?: number) => void;
   addItem: (product: Product, quantity?: number) => Promise<void>;
   removeItem: (cartItemId: number) => Promise<void>;
   updateQuantity: (productId: number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
+  requestLogin: () => void;
 }
 
 export const useCartStore = create<CartStore>()((set) => ({
   items: [],
   totalAmount: 0,
   itemCount: 0,
+  isPending: false,
+  pendingProductId: null,
 
   fetchCart: async () => {
     try {
@@ -46,7 +51,7 @@ export const useCartStore = create<CartStore>()((set) => ({
       const { isAuthenticated } = useAuthStore.getState();
       if (!isAuthenticated) {
         useCartStore.getState().addGuestItem(product, quantity);
-        window.location.href = '/login';
+        set({ isPending: true, pendingProductId: product.id });
         return;
       }
       const cart = await cartApi.addItem(product.id, quantity);
@@ -56,8 +61,13 @@ export const useCartStore = create<CartStore>()((set) => ({
         itemCount: cart.itemCount
       });
     } catch (error) {
+      set({ isPending: false, pendingProductId: null });
       console.error('Failed to add item to cart:', error);
     }
+  },
+
+  requestLogin: () => {
+    set({ isPending: false, pendingProductId: null });
   },
 
   removeItem: async (cartItemId) => {

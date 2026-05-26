@@ -71,12 +71,14 @@ export default function CheckoutPage() {
     }
     setSubmitting(true);
     try {
+      // Create order on backend first
       const result = await createOrder({
         deliveryMethod,
         shippingAddress: form,
         promoCode: promoApplied ? promoCode : undefined,
       });
 
+      // Build order object from response
       const orderItems = items.map((item) => ({
         productId: item.productId,
         name: item.name,
@@ -102,20 +104,23 @@ export default function CheckoutPage() {
         shippingAddress: form,
       };
 
-      addAdminOrder(order);
+      // Update local stores after backend confirmation
       if (isAuthenticated) {
         addAuthOrder(order);
       }
+      addAdminOrder(order);
+      await clearCart();
 
-      clearCart();
+      // Navigate only after all updates succeed
       navigate('/order-success', { 
         state: { 
           orderId: result.orderId,
           orderNumber: result.orderNumber 
         } 
       });
-    } catch {
-      toast({ title: "Something went wrong", variant: "destructive" });
+    } catch (error) {
+      console.error('Order creation failed:', error);
+      toast({ title: "Order creation failed", description: "Please try again or contact support", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
