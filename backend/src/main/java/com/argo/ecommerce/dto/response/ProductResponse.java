@@ -2,6 +2,7 @@ package com.argo.ecommerce.dto.response;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public class ProductResponse {
     private Long id;
@@ -11,7 +12,8 @@ public class ProductResponse {
     private Integer stockQuantity;
     private boolean inStock;
     private String sku, badge, warranty, createdAt;
-    private Object specifications, features;
+    private Map<String, String> specifications;
+    private List<String> features;
     private Double rating;
     private Integer reviewCount;
     private CategoryInfo category;
@@ -36,8 +38,8 @@ public class ProductResponse {
     public Double getRating() { return rating; }
     public Integer getReviewCount() { return reviewCount; }
     public String getWarranty() { return warranty; }
-    public Object getSpecifications() { return specifications; }
-    public Object getFeatures() { return features; }
+    public Map<String, String> getSpecifications() { return specifications; }
+    public List<String> getFeatures() { return features; }
     public CategoryInfo getCategory() { return category; }
     public String getCreatedAt() { return createdAt; }
 
@@ -62,8 +64,8 @@ public class ProductResponse {
         public Builder rating(Double v) { r.rating = v; return this; }
         public Builder reviewCount(Integer v) { r.reviewCount = v; return this; }
         public Builder warranty(String v) { r.warranty = v; return this; }
-        public Builder specifications(Object v) { r.specifications = v; return this; }
-        public Builder features(Object v) { r.features = v; return this; }
+        public Builder specifications(Map<String, String> v) { r.specifications = v; return this; }
+        public Builder features(List<String> v) { r.features = v; return this; }
         public Builder category(CategoryInfo v) { r.category = v; return this; }
         public Builder createdAt(String v) { r.createdAt = v; return this; }
         public ProductResponse build() { return r; }

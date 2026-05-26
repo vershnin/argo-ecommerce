@@ -26,7 +26,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                 OR LOWER(CAST(p.brand AS string)) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%'))
                                 OR LOWER(CAST(p.description AS string)) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))
           AND (:categoryId IS NULL OR p.category.id = :categoryId)
-          AND (:brand IS NULL OR LOWER(CAST(p.brand AS string)) = LOWER(CAST(:brand AS string)))
+          AND (:brands IS NULL OR LOWER(CAST(p.brand AS string)) IN :brands)
           AND (:minPrice IS NULL OR p.price >= :minPrice)
           AND (:maxPrice IS NULL OR p.price <= :maxPrice)
           AND (:inStock IS NULL OR (:inStock = true AND p.stockQuantity > 0))
@@ -34,7 +34,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> searchProducts(
             @Param("keyword") String keyword,
             @Param("categoryId") Long categoryId,
-            @Param("brand") String brand,
+            @Param("brands") java.util.List<String> brands,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("inStock") Boolean inStock,
