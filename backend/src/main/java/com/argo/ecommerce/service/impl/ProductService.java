@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.Normalizer;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -39,9 +40,21 @@ public class ProductService {
             Boolean inStock, String sort,
             int page, int size) {
 
+        List<String> brands = null;
+        if (brand != null && !brand.isBlank()) {
+            brands = Arrays.stream(brand.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(String::toLowerCase)
+                    .toList();
+            if (brands.isEmpty()) {
+                brands = null;
+            }
+        }
+
         Pageable pageable = PageRequest.of(page, size, resolveSort(sort));
         Page<Product> result = productRepository.searchProducts(
-                keyword, categoryId, brand, minPrice, maxPrice, inStock, pageable);
+                keyword, categoryId, brands, minPrice, maxPrice, inStock, pageable);
 
         return toPageResponse(result);
     }
