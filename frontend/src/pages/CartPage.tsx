@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
+import { fetchProductBySlug } from "@/api/products";
 import { useToast } from "@/hooks/use-toast";
 import { formatPrice } from "@/lib/formatters";
 import type { Product } from "@/types/product";
@@ -67,31 +68,15 @@ export default function CartPage() {
                         onClick={async () => {
                           if (isInWishlist(item.productId)) {
                             toast({ title: "Already in wishlist" });
-                          } else {
-                            const product: Product = {
-                              id: item.productId,
-                              name: item.name,
-                              slug: item.slug,
-                              category: { id: 'unknown', name: 'Uncategorized', slug: 'uncategorized' },
-                              brand: '',
-                              price: item.price,
-                              effectivePrice: item.price,
-                              description: item.name,
-                              shortDescription: item.name,
-                              imageUrl: item.imageUrl,
-                              additionalImages: [],
-                              specifications: {},
-                              features: [],
-                              sku: String(item.productId),
-                              stockQuantity: item.stockQuantity,
-                              inStock: item.stockQuantity > 0,
-                              rating: 0,
-                              reviewCount: 0,
-                              createdAt: new Date().toISOString(),
-                            };
+                            return;
+                          }
 
+                          try {
+                            const product = await fetchProductBySlug(item.slug);
                             await addToWishlist(product);
                             toast({ title: "Added to wishlist" });
+                          } catch (error) {
+                            toast({ title: "Could not add to wishlist", description: "Unable to load product details." });
                           }
                         }}
                       >
