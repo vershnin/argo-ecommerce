@@ -70,14 +70,14 @@ export default function AdminProducts() {
     // Find category ID by name
     const cat = categories.find(c => c.name === p.category.name);
     setForm({
-      name: p.name, 
-      categoryId: cat ? cat.id : "", 
-      brand: p.brand, 
+      name: p.name,
+      categoryId: cat ? cat.id.toString() : "",
+      brand: p.brand,
       price: p.price,
-      description: p.description, 
+      description: p.description,
       shortDescription: p.shortDescription,
-      sku: p.sku, 
-      stockQuantity: p.stockQuantity, 
+      sku: p.sku,
+      stockQuantity: p.stockQuantity,
       imageUrl: p.imageUrl,
       additionalImages: p.additionalImages?.join(",") || "",
     });
