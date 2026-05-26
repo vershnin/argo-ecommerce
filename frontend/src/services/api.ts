@@ -70,6 +70,7 @@ export async function fetchProducts(params?: {
     params: {
       keyword: params?.search,
       categoryId,
+      brand: params?.brand,
       minPrice: params?.minPrice,
       maxPrice: params?.maxPrice,
       inStock: params?.inStock,
