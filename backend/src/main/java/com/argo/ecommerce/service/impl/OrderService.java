@@ -183,6 +183,16 @@ public class OrderService {
         return toResponse(savedOrder);
     }
 
+    @Transactional(readOnly = true)
+    public long countOrders() {
+        return orderRepository.count();
+    }
+
+    @Transactional(readOnly = true)
+    public java.math.BigDecimal calculateTotalRevenue() {
+        return orderRepository.sumTotalAmount();
+    }
+
     private void restoreStockForCancelledOrder(Order order) {
         for (OrderItem item : order.getItems()) {
             if (item.getProduct() == null) continue;
