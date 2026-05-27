@@ -18,6 +18,7 @@ interface CategoryApiResponse {
 }
 
 interface CouponResponse {
+  id?: number;
   code: string;
   type: string;
   discount?: number;
@@ -25,6 +26,23 @@ interface CouponResponse {
   message?: string;
   expiresAt?: string;
   active?: boolean;
+  minOrderAmount?: number;
+}
+
+interface AdminCouponRequest {
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minOrder?: number;
+  expiresAt?: string;
+  active?: boolean;
+}
+
+interface AdminSummaryResponse {
+  totalProducts: number;
+  totalOrders: number;
+  totalRevenue: number;
+  activePromotions: number;
 }
 
 interface RegisterRequest {
@@ -145,6 +163,7 @@ export async function validatePromoCode(code: string, orderTotal: number): Promi
       type: response.data.type?.toLowerCase() as PromoCode['type'],
       discount: response.data.discount !== undefined ? Number(response.data.discount) : undefined,
       value: Number(response.data.value),
+      minOrder: response.data.minOrderAmount !== undefined ? Number(response.data.minOrderAmount) : undefined,
       expiresAt: response.data.expiresAt ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
       active: response.data.active ?? true,
     };
@@ -153,6 +172,76 @@ export async function validatePromoCode(code: string, orderTotal: number): Promi
   } catch (error: unknown) {
     return { valid: false, message: getErrorMessage(error, 'Invalid promo code') };
   }
+}
+
+export async function fetchAdminSummary(): Promise<AdminSummaryResponse> {
+  const response = await api.get<AdminSummaryResponse>('/admin/summary');
+  return response.data;
+}
+
+export async function fetchPromoCodes(): Promise<PromoCode[]> {
+  const response = await api.get<CouponResponse[]>('/admin/coupons');
+  return response.data.map((coupon) => ({
+    id: coupon.id,
+    code: coupon.code,
+    type: coupon.type.toLowerCase() as PromoCode['type'],
+    value: Number(coupon.value),
+    minOrder: coupon.minOrderAmount !== undefined ? Number(coupon.minOrderAmount) : undefined,
+    expiresAt: coupon.expiresAt ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    active: coupon.active ?? true,
+  }));
+}
+
+export async function createPromoCode(data: AdminCouponRequest): Promise<PromoCode> {
+  const response = await api.post<CouponResponse>('/admin/coupons', data);
+  return {
+    id: response.data.id,
+    code: response.data.code,
+    type: response.data.type.toLowerCase() as PromoCode['type'],
+    value: Number(response.data.value),
+    minOrder: response.data.minOrderAmount !== undefined ? Number(response.data.minOrderAmount) : undefined,
+    expiresAt: response.data.expiresAt ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    active: response.data.active ?? true,
+  };
+}
+
+export async function updatePromoCode(id: number, data: AdminCouponRequest): Promise<PromoCode> {
+  const response = await api.put<CouponResponse>(`/admin/coupons/${id}`, data);
+  return {
+    id: response.data.id,
+    code: response.data.code,
+    type: response.data.type.toLowerCase() as PromoCode['type'],
+    value: Number(response.data.value),
+    minOrder: response.data.minOrderAmount !== undefined ? Number(response.data.minOrderAmount) : undefined,
+    expiresAt: response.data.expiresAt ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    active: response.data.active ?? true,
+  };
+}
+
+export async function deletePromoCode(id: number): Promise<void> {
+  await api.delete(`/admin/coupons/${id}`);
+}
+
+export async function fetchAddresses(): Promise<Address[]> {
+  const response = await api.get<Address[]>('/addresses');
+  return response.data;
+}
+
+export async function createAddress(data: {
+  label: string;
+  fullName: string;
+  phone: string;
+  street: string;
+  city: string;
+  region: string;
+  isDefault?: boolean;
+}): Promise<Address> {
+  const response = await api.post<Address>('/addresses', data);
+  return response.data;
+}
+
+export async function deleteAddress(id: number): Promise<void> {
+  await api.delete(`/addresses/${id}`);
 }
 
 // ─── Orders ──────────────────────────────────────────────────

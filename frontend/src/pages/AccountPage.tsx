@@ -1,10 +1,16 @@
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Package, User, Loader2, ChevronRight } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { LogOut, Package, User, Loader2, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { useAuthStore } from "@/stores/authStore";
+import { fetchAddresses, createAddress, deleteAddress } from "@/services/api";
 import { fetchMyOrders } from "@/api/orders";
 
 const STATUS_COLOURS: Record<string, string> = {
@@ -20,6 +26,44 @@ export default function AccountPage() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    label: "Home",
+    fullName: "",
+    phone: "",
+    street: "",
+    city: "Nairobi",
+    region: "Nairobi",
+    isDefault: false,
+  });
+
+  const { data: addresses = [], isLoading: addressesLoading } = useQuery({
+    queryKey: ["addresses"],
+    queryFn: () => fetchAddresses(),
+    enabled: !!user,
+  });
+
+  const createAddressMutation = useMutation({
+    mutationFn: createAddress,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addresses"] });
+      setAddressDialogOpen(false);
+      setAddressForm({
+        label: "Home",
+        fullName: "",
+        phone: "",
+        street: "",
+        city: "Nairobi",
+        region: "Nairobi",
+        isDefault: false,
+      });
+    },
+  });
+
+  const deleteAddressMutation = useMutation({
+    mutationFn: deleteAddress,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["addresses"] }),
+  });
 
   // ── Fetch order history from backend ──────────────────────
   const { data: ordersPage, isLoading } = useQuery({
@@ -34,6 +78,11 @@ export default function AccountPage() {
     queryClient.removeQueries({ queryKey: ["cart"] });
     queryClient.removeQueries({ queryKey: ["my-orders"] });
     navigate("/", { replace: true });
+  };
+
+  const handleCreateAddress = (e: FormEvent) => {
+    e.preventDefault();
+    createAddressMutation.mutate(addressForm);
   };
 
   if (!user) return null;
@@ -77,6 +126,129 @@ export default function AccountPage() {
           </Button>
         </div>
       )}
+
+      <div className="mb-8 rounded-2xl border border-border bg-card p-6">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-xl font-semibold">Saved Addresses</h2>
+            <p className="text-sm text-muted-foreground">Keep delivery details ready for faster checkout.</p>
+          </div>
+          <Button size="sm" onClick={() => setAddressDialogOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" /> Add Address
+          </Button>
+        </div>
+
+        {addressesLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : addresses.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            No saved addresses yet. Add one to speed up future orders.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {addresses.map((address) => (
+              <div key={address.id} className="rounded-xl border border-border p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-semibold">{address.label || "Address"}</p>
+                    {address.isDefault && <Badge variant="secondary">Default</Badge>}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{address.fullName}</p>
+                  <p className="text-sm">{address.phone}</p>
+                  <p className="text-sm">{address.street}, {address.city}, {address.region}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => deleteAddressMutation.mutate(address.id!)} disabled={deleteAddressMutation.status === "pending"}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Address</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateAddress} className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="label">Label</Label>
+                <Input
+                  id="label"
+                  value={addressForm.label}
+                  onChange={(e) => setAddressForm({ ...addressForm, label: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={addressForm.fullName}
+                  onChange={(e) => setAddressForm({ ...addressForm, fullName: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={addressForm.phone}
+                  onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="street">Street</Label>
+                <Input
+                  id="street"
+                  value={addressForm.street}
+                  onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  value={addressForm.city}
+                  onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="region">Region</Label>
+                <Input
+                  id="region"
+                  value={addressForm.region}
+                  onChange={(e) => setAddressForm({ ...addressForm, region: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                id="default"
+                checked={addressForm.isDefault}
+                onCheckedChange={(value) => setAddressForm({ ...addressForm, isDefault: value })}
+              />
+              <Label htmlFor="default">Set as default shipping address</Label>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" type="button" onClick={() => setAddressDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createAddressMutation.status === "pending"}>
+                Save Address
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Order history ───────────────────────────────────── */}
       <div>

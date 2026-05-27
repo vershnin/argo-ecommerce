@@ -54,6 +54,8 @@ export interface Review {
 
 
 export interface Address {
+  id?: number;
+  label?: string;
   fullName: string;
   phone: string;
   email: string;
@@ -61,9 +63,11 @@ export interface Address {
   city: string;
   region: string;
   notes?: string;
+  isDefault?: boolean;
 }
 
 export interface PromoCode {
+  id?: number;
   code: string;
   type: 'percentage' | 'fixed';
   value: number;
