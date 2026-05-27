@@ -159,6 +159,11 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
+    public long countProducts() {
+        return productRepository.count();
+    }
+
     // ── Helpers ────────────────────────────────────────────────
 
     private PageResponse<ProductResponse> toPageResponse(Page<Product> page) {
