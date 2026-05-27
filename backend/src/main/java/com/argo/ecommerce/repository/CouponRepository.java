@@ -3,6 +3,7 @@ package com.argo.ecommerce.repository;
 import com.argo.ecommerce.entity.Coupon;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 import jakarta.persistence.LockModeType;
@@ -13,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 public interface CouponRepository extends JpaRepository<Coupon, Long> {
     Optional<Coupon> findByCodeIgnoreCase(String code);
     boolean existsByCodeIgnoreCase(String code);
+    long countByActiveTrue();
+    List<Coupon> findAllByOrderByCodeAsc();
 
     @Query("SELECT c FROM Coupon c WHERE LOWER(c.code) = LOWER(:code)")
     @Lock(LockModeType.PESSIMISTIC_WRITE)
