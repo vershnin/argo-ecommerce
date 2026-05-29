@@ -1,5 +1,6 @@
 package com.argo.ecommerce.service.impl;
 
+import com.argo.ecommerce.config.AppConfig;
 import com.argo.ecommerce.dto.response.ProductResponse;
 import com.argo.ecommerce.entity.Product;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,10 +21,12 @@ import java.util.Map;
 public class ProductMapper {
 
     private final ObjectMapper objectMapper;
+    private final AppConfig appConfig;
     private static final Logger log = LoggerFactory.getLogger(ProductMapper.class);
 
-    public ProductMapper(ObjectMapper objectMapper) {
+    public ProductMapper(ObjectMapper objectMapper, AppConfig appConfig) {
         this.objectMapper = objectMapper;
+        this.appConfig = appConfig;
     }
 
     public ProductResponse toResponse(Product p) {
@@ -34,8 +37,8 @@ public class ProductMapper {
                 .description(p.getDescription())
                 .shortDescription(p.getShortDescription())
                 .brand(p.getBrand())
-                .imageUrl(p.getImageUrl())
-                .additionalImages(parseImages(p.getAdditionalImages()))
+                .imageUrl(normalizeUrl(p.getImageUrl()))
+                .additionalImages(normalizeUrls(p.getAdditionalImageUrls()))
                 .price(p.getPrice())
                 .discountPrice(p.getDiscountPrice())
                 .effectivePrice(p.getEffectivePrice())
@@ -147,13 +150,27 @@ public class ProductMapper {
         return result;
     }
 
-    private List<String> parseImages(String additionalImages) {
-        if (additionalImages == null || additionalImages.isBlank()) {
+    private List<String> normalizeUrls(List<String> urls) {
+        if (urls == null || urls.isEmpty()) {
             return Collections.emptyList();
         }
-        return Arrays.stream(additionalImages.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
+        return urls.stream()
+                .map(this::normalizeUrl)
+                .filter(url -> url != null && !url.isBlank())
                 .toList();
+    }
+
+    private String normalizeUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return url;
+        }
+        String normalized = url.trim();
+        if (normalized.startsWith("/uploads/")) {
+            return appConfig.getBaseUrl() + normalized;
+        }
+        if (normalized.startsWith("uploads/")) {
+            return appConfig.getBaseUrl() + "/" + normalized;
+        }
+        return normalized;
     }
 }
