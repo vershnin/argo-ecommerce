@@ -5,10 +5,14 @@ import com.argo.ecommerce.dto.response.PageResponse;
 import com.argo.ecommerce.dto.response.ProductResponse;
 import com.argo.ecommerce.entity.Category;
 import com.argo.ecommerce.entity.Product;
+import com.argo.ecommerce.entity.ProductImage;
 import com.argo.ecommerce.exception.ResourceNotFoundException;
 import com.argo.ecommerce.repository.CategoryRepository;
 import com.argo.ecommerce.repository.ProductRepository;
+import com.argo.ecommerce.service.StorageService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,17 +23,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
+
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductMapper mapper;
+    private final StorageService storageService;
 
     // ── Public reads ───────────────────────────────────────────
 
@@ -119,6 +128,7 @@ public class ProductService {
                 .rating(0.0)
                 .reviewCount(0)
                 .build();
+        product.setProductImages(toProductImageEntities(product, request.getAdditionalImages()));
 
         return mapper.toResponse(productRepository.save(product));
     }
@@ -132,12 +142,16 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Category not found: " + request.getCategoryId()));
 
+        String previousImageUrl = product.getImageUrl();
+        List<String> previousAdditionalImages = product.getAdditionalImageUrls();
+
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setShortDescription(request.getShortDescription());
         product.setBrand(request.getBrand());
         product.setImageUrl(request.getImageUrl());
         product.setAdditionalImages(request.getAdditionalImages());
+        product.setProductImages(toProductImageEntities(product, request.getAdditionalImages()));
         product.setPrice(request.getPrice());
         product.setDiscountPrice(request.getDiscountPrice());
         product.setStockQuantity(request.getStockQuantity());
@@ -148,15 +162,78 @@ public class ProductService {
         product.setFeatures(request.getFeatures());
         product.setCategory(category);
 
-        return mapper.toResponse(productRepository.save(product));
+        Product updated = productRepository.save(product);
+
+        cleanupRemovedImages(previousImageUrl, previousAdditionalImages,
+                updated.getImageUrl(), updated.getAdditionalImageUrls());
+
+        return mapper.toResponse(updated);
     }
 
     @Transactional
     public void deleteProduct(Long id) {
-        if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found: " + id);
-        }
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + id));
+
+        deleteStorageUrls(product.getImageUrl(), product.getAdditionalImageUrls());
         productRepository.deleteById(id);
+    }
+
+    private void cleanupRemovedImages(String previousImageUrl,
+                                      List<String> previousAdditionalImages,
+                                      String currentImageUrl,
+                                      List<String> currentAdditionalImages) {
+        if (previousImageUrl != null && !previousImageUrl.isBlank()
+                && (currentImageUrl == null || !previousImageUrl.equals(currentImageUrl))) {
+            deleteStorageUrl(previousImageUrl);
+        }
+
+        Set<String> previousAdditional = normalizeImageSet(previousAdditionalImages);
+        Set<String> currentAdditional = normalizeImageSet(currentAdditionalImages);
+        previousAdditional.stream()
+                .filter(url -> !currentAdditional.contains(url))
+                .forEach(this::deleteStorageUrl);
+    }
+
+    private void deleteStorageUrls(String imageUrl, List<String> imageUrls) {
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            deleteStorageUrl(imageUrl);
+        }
+        normalizeImageSet(imageUrls).forEach(this::deleteStorageUrl);
+    }
+
+    private List<ProductImage> toProductImageEntities(Product product, String additionalImages) {
+        if (additionalImages == null || additionalImages.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(additionalImages.split(","))
+                .map(String::trim)
+                .filter(url -> !url.isBlank())
+                .map(url -> {
+                    ProductImage image = new ProductImage();
+                    image.setUrl(url);
+                    image.setProduct(product);
+                    return image;
+                })
+                .toList();
+    }
+
+    private void deleteStorageUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return;
+        }
+        try {
+            storageService.delete(url);
+        } catch (Exception e) {
+            log.warn("Failed to delete orphan image URL {}: {}", url, e.getMessage());
+        }
+    }
+
+    private Set<String> normalizeImageSet(List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return new HashSet<>();
+        }
+        return new HashSet<>(imageUrls);
     }
 
     @Transactional(readOnly = true)
