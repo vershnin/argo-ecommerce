@@ -7,6 +7,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -37,8 +39,12 @@ public class Product {
     @Column(nullable = false)
     private String imageUrl;
 
+    @Deprecated
     @Column(columnDefinition = "TEXT")
     private String additionalImages;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImage> productImages = new ArrayList<>();
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
@@ -102,8 +108,26 @@ public class Product {
     public void setBrand(String brand) { this.brand = brand; }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    @Deprecated
     public String getAdditionalImages() { return additionalImages; }
+    @Deprecated
     public void setAdditionalImages(String additionalImages) { this.additionalImages = additionalImages; }
+    public List<ProductImage> getProductImages() { return productImages; }
+    public void setProductImages(List<ProductImage> productImages) { this.productImages = productImages; }
+
+    public List<String> getAdditionalImageUrls() {
+        if (productImages != null && !productImages.isEmpty()) {
+            return productImages.stream().map(ProductImage::getUrl).toList();
+        }
+        if (additionalImages == null || additionalImages.isBlank()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(additionalImages.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
     public BigDecimal getDiscountPrice() { return discountPrice; }
