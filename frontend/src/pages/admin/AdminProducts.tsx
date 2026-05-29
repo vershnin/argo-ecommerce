@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
-import { Plus, Search, Edit2, Trash2, Package, AlertTriangle, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Plus, Search, Edit2, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -17,9 +18,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Product, Category } from "@/types/product";
 import { fetchCategories, AdminProductRequest, uploadProductImage } from "@/services/api";
 
+// Production-safe file size limits (must match backend)
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE_MB = 5;
+
+const validateFileSize = (file: File): string | null => {
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return `File size exceeds ${MAX_FILE_SIZE_MB}MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB)`;
+  }
+  return null;
+};
+
 const emptyProduct = {
   name: "", categoryId: "", brand: "", price: 0, description: "",
-  shortDescription: "", sku: "", stockQuantity: 10, imageUrl: "/placeholder.svg",
+  shortDescription: "", sku: "", stockQuantity: 10, imageUrl: "",
   additionalImages: "",
 };
 
@@ -31,25 +43,26 @@ export default function AdminProducts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState(emptyProduct);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
-  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const loadCategories = useCallback(async () => {
-    try {
-      const data = await fetchCategories();
-      setCategories(data);
-    } catch (error: unknown) {
+  const categoriesQuery = useQuery<Category[]>({
+    queryKey: ["admin-categories"],
+    queryFn: fetchCategories,
+    staleTime: 1000 * 60 * 5,
+  });
+  const categories = categoriesQuery.data ?? [];
+
+  useEffect(() => {
+    if (categoriesQuery.isError) {
       toast({ title: "Error", description: "Failed to load categories", variant: "destructive" });
     }
-  }, [toast]);
+  }, [categoriesQuery.isError, toast]);
 
   useEffect(() => {
     fetchProducts();
-    loadCategories();
-  }, [fetchProducts, loadCategories]);
+  }, [fetchProducts]);
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
@@ -60,18 +73,14 @@ export default function AdminProducts() {
   const openAdd = () => {
     setEditing(null);
     setForm(emptyProduct);
-    setMainImageFile(null);
-    setAdditionalImageFiles([]);
     setDialogOpen(true);
   };
 
   const openEdit = (p: Product) => {
     setEditing(p);
-    // Find category ID by name
-    const cat = categories.find(c => c.name === p.category.name);
     setForm({
       name: p.name,
-      categoryId: cat ? cat.id.toString() : "",
+      categoryId: p.category.id.toString(),
       brand: p.brand,
       price: p.price,
       description: p.description,
@@ -81,45 +90,77 @@ export default function AdminProducts() {
       imageUrl: p.imageUrl,
       additionalImages: p.additionalImages?.join(",") || "",
     });
-    setMainImageFile(null);
-    setAdditionalImageFiles([]);
     setDialogOpen(true);
   };
 
   const handleMainImageUpload = async (file: File) => {
+    const sizeError = validateFileSize(file);
+    if (sizeError) {
+      toast({ title: "File too large", description: sizeError, variant: "destructive" });
+      return;
+    }
+
     setUploadingImage(true);
+    setUploadProgress(0);
     try {
-      const imageUrl = await uploadProductImage(file);
+      const imageUrl = await uploadProductImage(file, (event) => {
+        if (event.total) {
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      });
       setForm({ ...form, imageUrl });
-      setMainImageFile(null);
+      // setMainImageFile(null); // Removed as per the request
       toast({ title: "Main image uploaded successfully" });
     } catch (error: any) {
-      toast({ title: "Failed to upload image", description: error.message, variant: "destructive" });
+      const message = error instanceof Error ? error.message : "Unable to upload image";
+      toast({ title: "Failed to upload image", description: message, variant: "destructive" });
     } finally {
       setUploadingImage(false);
+      setUploadProgress(0);
     }
   };
 
   const handleAdditionalImageUpload = async (files: File[]) => {
+    const invalidFiles = files.filter(file => {
+      const sizeError = validateFileSize(file);
+      if (sizeError) {
+        toast({ title: "File too large", description: `${file.name}: ${sizeError}`, variant: "destructive" });
+        return true;
+      }
+      return false;
+    });
+
+    if (invalidFiles.length > 0) return;
+
     setUploadingImage(true);
+    setUploadProgress(0);
     try {
-      const uploadPromises = files.map(file => uploadProductImage(file));
-      const urls = await Promise.all(uploadPromises);
+      const urls: string[] = [];
+      for (const file of files) {
+        const imageUrl = await uploadProductImage(file, (event) => {
+          if (event.total) {
+            setUploadProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        });
+        urls.push(imageUrl);
+      }
+
       const existingUrls = form.additionalImages ? form.additionalImages.split(',').map(url => url.trim()).filter(url => url) : [];
-      const newAdditionalImages = [...existingUrls, ...urls].join(', ');
-      setForm({ ...form, additionalImages: newAdditionalImages });
-      setAdditionalImageFiles([]);
+      setForm({ ...form, additionalImages: [...existingUrls, ...urls].join(', ') });
+      // setAdditionalImageFiles([]); // Removed as per the request
       toast({ title: `${urls.length} additional image(s) uploaded successfully` });
     } catch (error: any) {
-      toast({ title: "Failed to upload images", description: error.message, variant: "destructive" });
+      const message = error instanceof Error ? error.message : "Unable to upload images";
+      toast({ title: "Failed to upload images", description: message, variant: "destructive" });
     } finally {
       setUploadingImage(false);
+      setUploadProgress(0);
     }
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.categoryId || !form.brand || !form.sku) {
-      toast({ title: "Please fill in required fields", variant: "destructive" });
+    if (!form.name || !form.categoryId || !form.brand || !form.sku || !form.imageUrl) {
+      toast({ title: "Please fill in required fields", description: "Name, brand, SKU, category and image are required.", variant: "destructive" });
       return;
     }
 
@@ -225,7 +266,15 @@ const handleDelete = async (id: number) => {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shrink-0">
-                        <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />
+                        <img 
+                          src={p.imageUrl} 
+                          alt="" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder.svg';
+                            e.currentTarget.onerror = null;
+                          }}
+                        />
                       </div>
                       <div>
                         <p className="font-medium text-foreground line-clamp-1">{p.name}</p>
@@ -316,16 +365,27 @@ const handleDelete = async (id: number) => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      setMainImageFile(file);
                       handleMainImageUpload(file);
                     }
                   }}
                   disabled={uploadingImage}
                 />
-                {uploadingImage && <p className="text-sm text-muted-foreground">Uploading...</p>}
-                {form.imageUrl && form.imageUrl !== "/placeholder.svg" && (
+                {uploadingImage && (
+                  <p className="text-sm text-muted-foreground">
+                    Uploading... {uploadProgress > 0 && `${uploadProgress}%`}
+                  </p>
+                )}
+                {form.imageUrl && (
                   <div className="flex items-center gap-2">
-                    <img src={form.imageUrl} alt="Main product" className="w-16 h-16 object-cover rounded" />
+                    <img 
+                      src={form.imageUrl} 
+                      alt="Main product" 
+                      className="w-16 h-16 object-cover rounded"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg';
+                        e.currentTarget.onerror = null;
+                      }}
+                    />
                     <span className="text-sm text-muted-foreground">Current image</span>
                   </div>
                 )}
@@ -346,13 +406,16 @@ const handleDelete = async (id: number) => {
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
                     if (files.length > 0) {
-                      setAdditionalImageFiles(files);
                       handleAdditionalImageUpload(files);
                     }
                   }}
                   disabled={uploadingImage}
                 />
-                {uploadingImage && <p className="text-sm text-muted-foreground">Uploading...</p>}
+                {uploadingImage && (
+                  <p className="text-sm text-muted-foreground">
+                    Uploading additional images... {uploadProgress > 0 && `${uploadProgress}%`}
+                  </p>
+                )}
                 <Input
                   placeholder="Or enter image URLs (comma separated)"
                   value={form.additionalImages}
