@@ -38,7 +38,15 @@ export default function CartPage() {
             return (
               <div key={item.cartItemId} className="flex gap-4 p-4 rounded-xl border border-border bg-card">
                 <div className="w-24 h-24 bg-secondary/50 rounded-lg p-2 shrink-0 flex items-center justify-center">
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" />
+                  <img 
+                    src={item.imageUrl} 
+                    alt={item.name} 
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                      e.currentTarget.onerror = null;
+                    }}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm transition-colors line-clamp-2">
