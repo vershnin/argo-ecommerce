@@ -66,6 +66,10 @@ export function ProductImageGallery({ imageUrl, additionalImages, productName }:
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder.svg';
+                e.currentTarget.onerror = null;
+              }}
             />
           </AnimatePresence>
           <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors flex items-center justify-center">
@@ -90,6 +94,10 @@ export function ProductImageGallery({ imageUrl, additionalImages, productName }:
                   src={img}
                   alt={`${productName} thumbnail ${i + 1}`}
                   className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = '/placeholder.svg';
+                    e.currentTarget.onerror = null;
+                  }}
                 />
               </button>
             ))}
