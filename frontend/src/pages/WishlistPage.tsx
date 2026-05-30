@@ -49,7 +49,15 @@ export default function WishlistPage() {
         {items.map((product) => (
           <div key={product.id} className="rounded-xl border border-border bg-card overflow-hidden">
             <Link to={`/product/${product.slug}`} className="block aspect-square bg-secondary/50 p-6 flex items-center justify-center">
-              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
+              <img 
+                src={product.imageUrl} 
+                alt={product.name} 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                  e.currentTarget.onerror = null;
+                }}
+              />
             </Link>
             <div className="p-4">
               <p className="text-xs text-muted-foreground">{product.brand}</p>
