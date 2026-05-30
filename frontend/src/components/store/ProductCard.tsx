@@ -53,6 +53,10 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder.svg';
+              e.currentTarget.onerror = null;
+            }}
           />
 
           {/* Badges */}
