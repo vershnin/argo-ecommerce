@@ -1,4 +1,5 @@
 import { apiClient as api } from '@/api/client';
+import type { AxiosProgressEvent, AxiosResponse } from 'axios';
 import { Product, Review, PromoCode, Category, Address } from '@/types/product';
 import { UserProfile } from '@/stores/authStore';
 
@@ -334,19 +335,19 @@ export async function adminDeleteCategory(id: number): Promise<void> {
 
 // ─── File Upload ─────────────────────────────────────────────
 
-export async function uploadProductImage(file: File): Promise<string> {
+export async function uploadProductImage(
+  file: File,
+  onUploadProgress?: (event: AxiosProgressEvent) => void
+): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await api.post<{ success: boolean; message: string; data: string }>(
-    '/admin/upload/image',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    }
-  );
+  const response = await api.post('/admin/upload/image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    onUploadProgress,
+  }) as AxiosResponse<{ success: boolean; message: string; data: string }>;
 
   if (!response.data.success) {
     throw new Error(response.data.message);
